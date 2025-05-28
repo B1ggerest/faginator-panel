@@ -1,866 +1,202 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Faginator Suite - API Key Manager</title>
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.0/axios.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-            background: #0a0a0a;
-            color: #ffffff;
-            line-height: 1.6;
-            min-height: 100vh;
-            overflow-x: hidden;
-            position: relative;
-        }
-
-        /* Geometric Particle Background */
-        .particles {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 0;
-            overflow: hidden;
-        }
-
-        .particle {
-            position: absolute;
-            background: linear-gradient(45deg, #6366f1, #8b5cf6, #06b6d4);
-            opacity: 0.6;
-            animation: particleFloat linear infinite;
-        }
-
-        .particle.square {
-            width: 4px;
-            height: 4px;
-        }
-
-        .particle.rectangle {
-            width: 8px;
-            height: 2px;
-        }
-
-        .particle.line {
-            width: 1px;
-            height: 20px;
-        }
-
-        @keyframes particleFloat {
-            0% {
-                transform: translateY(100vh) translateX(0px) rotate(0deg);
-                opacity: 0;
-            }
-            10% {
-                opacity: 0.6;
-            }
-            90% {
-                opacity: 0.6;
-            }
-            100% {
-                transform: translateY(-10vh) translateX(100px) rotate(360deg);
-                opacity: 0;
-            }
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 24px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-            border: 1px solid #333333;
-            padding: 40px;
-            text-align: center;
-            margin-bottom: 24px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.1), transparent);
-            animation: headerScan 4s infinite;
-        }
-
-        @keyframes headerScan {
-            0% { left: -100%; }
-            100% { left: 100%; }
-        }
-
-        .header .brand {
-            position: relative;
-            z-index: 2;
-        }
-
-        .header h1 {
-            font-size: 42px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .header .subtitle {
-            color: #a1a1aa;
-            font-size: 18px;
-            font-weight: 500;
-            margin-bottom: 4px;
-        }
-
-        .header .company {
-            color: #71717a;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 600;
-        }
-
-        .login-screen {
-            background: linear-gradient(135deg, #1a1a1a 0%, #262626 100%);
-            border: 1px solid #404040;
-            padding: 60px;
-            text-align: center;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
-            max-width: 450px;
-            margin: 0 auto;
-            position: relative;
-        }
-
-        .main-content {
-            display: none;
-        }
-
-        .login-form h2 {
-            margin-bottom: 32px;
-            color: #ffffff;
-            font-size: 24px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .input-group {
-            margin-bottom: 24px;
-            text-align: left;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #d4d4d8;
-            font-size: 13px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 16px 20px;
-            background: #000000;
-            border: 1px solid #404040;
-            color: #ffffff;
-            font-size: 15px;
-            transition: all 0.3s ease;
-            font-family: inherit;
-        }
-
-        .input-group input:focus {
-            outline: none;
-            border-color: #6366f1;
-            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-            background: #0a0a0a;
-        }
-
-        .btn {
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-            color: white;
-            border: none;
-            padding: 16px 32px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 700;
-            transition: all 0.3s ease;
-            margin: 4px;
-            position: relative;
-            overflow: hidden;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .btn:hover::before {
-            left: 100%;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .btn-danger {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-        }
-
-        .btn-danger:hover {
-            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
-        }
-
-        .btn-success {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        }
-
-        .btn-success:hover {
-            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
-        }
-
-        .btn-small {
-            padding: 10px 20px;
-            font-size: 12px;
-        }
-
-        .content-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 24px;
-            margin-bottom: 24px;
-        }
-
-        .panel {
-            background: linear-gradient(135deg, #1a1a1a 0%, #262626 100%);
-            border: 1px solid #404040;
-            padding: 32px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            transition: all 0.3s ease;
-        }
-
-        .panel:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
-            border-color: #525252;
-        }
-
-        .panel h3 {
-            color: #ffffff;
-            margin-bottom: 20px;
-            font-weight: 700;
-            font-size: 18px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .panel h3::before {
-            content: '';
-            width: 3px;
-            height: 20px;
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-        }
-
-        .key-list {
-            max-height: 450px;
-            overflow-y: auto;
-        }
-
-        .key-list::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .key-list::-webkit-scrollbar-track {
-            background: #1a1a1a;
-        }
-
-        .key-list::-webkit-scrollbar-thumb {
-            background: #404040;
-        }
-
-        .key-list::-webkit-scrollbar-thumb:hover {
-            background: #525252;
-        }
-
-        .key-item {
-            background: #000000;
-            border: 1px solid #262626;
-            padding: 20px;
-            margin-bottom: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: all 0.3s ease;
-        }
-
-        .key-item:hover {
-            background: #0a0a0a;
-            border-color: #404040;
-            transform: translateX(4px);
-        }
-
-        .key-info {
-            flex-grow: 1;
-            margin-right: 16px;
-        }
-
-        .key-name {
-            color: #6366f1;
-            font-weight: 700;
-            margin-bottom: 6px;
-            font-size: 15px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .key-value {
-            color: #71717a;
-            font-size: 12px;
-            font-family: 'JetBrains Mono', 'Fira Code', monospace;
-            word-break: break-all;
-            background: #1a1a1a;
-            padding: 6px 10px;
-            border: 1px solid #262626;
-        }
-
-        .key-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .status-message {
-            padding: 16px 20px;
-            margin-bottom: 20px;
-            display: none;
-            font-weight: 600;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .status-success {
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid #10b981;
-            color: #10b981;
-        }
-
-        .status-error {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid #ef4444;
-            color: #ef4444;
-        }
-
-        .add-key-form {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .add-key-form input {
-            flex: 1;
-            min-width: 200px;
-            padding: 16px 20px;
-            background: #000000;
-            border: 1px solid #404040;
-            color: #ffffff;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-
-        .add-key-form input:focus {
-            outline: none;
-            border-color: #6366f1;
-            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #71717a;
-        }
-
-        .empty-state svg {
-            width: 64px;
-            height: 64px;
-            margin-bottom: 16px;
-            opacity: 0.5;
-        }
-
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #262626;
-            border-top-color: #6366f1;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Technical grid overlay */
-        .tech-grid {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .connection-status {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-            padding: 8px 16px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .connection-online {
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid #10b981;
-            color: #10b981;
-        }
-
-        .connection-offline {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid #ef4444;
-            color: #ef4444;
-        }
-
-        @media (max-width: 768px) {
-            .content-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .add-key-form {
-                flex-direction: column;
-            }
-            
-            .container {
-                padding: 16px;
-            }
-
-            .panel {
-                padding: 24px;
-            }
-
-            .header h1 {
-                font-size: 32px;
-            }
-
-            .login-screen {
-                padding: 40px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Secure API Key Manager</title>
+  <style>
+    body {
+      background: #0a0a0a;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+    }
+    .card {
+      background: #1a1a1a;
+      padding: 2rem;
+      border-radius: 10px;
+      width: 100%;
+      max-width: 500px;
+      margin-bottom: 2rem;
+    }
+    h2 {
+      margin-bottom: 1rem;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+    input, button {
+      width: 100%;
+      padding: 0.75rem;
+      border-radius: 5px;
+      border: none;
+      font-size: 1rem;
+    }
+    button {
+      background: #00ff88;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .status {
+      margin-top: 1rem;
+      padding: 0.5rem;
+      border-radius: 5px;
+      text-align: center;
+      display: none;
+    }
+    .success {
+      background: #004d26;
+      color: #00ff88;
+    }
+    .error {
+      background: #400000;
+      color: #ff4444;
+    }
+    pre {
+      background: #000;
+      padding: 1rem;
+      margin-top: 1rem;
+      overflow-x: auto;
+    }
+  </style>
 </head>
 <body>
-    <!-- Connection Status Indicator -->
-    <div id="connectionStatus" class="connection-status connection-offline">
-        🔴 Connecting...
-    </div>
 
-    <!-- Technical Grid Background -->
-    <div class="tech-grid"></div>
-    
-    <!-- Geometric Particles -->
-    <div class="particles" id="particles"></div>
+  <div class="card" id="loginCard">
+    <h2>Admin Login</h2>
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="masterPassword">Master Password</label>
+        <input type="password" id="masterPassword" required />
+      </div>
+      <button type="submit">Login</button>
+      <div class="status" id="loginStatus"></div>
+    </form>
+  </div>
 
-    <div class="container">
-        <div class="header">
-            <div class="brand">
-                <h1>Faginator Suite</h1>
-                <div class="subtitle">API Key Management System</div>
-                <div class="company">Faginator Enterprises Ltd. ™</div>
-            </div>
-        </div>
+  <div class="card" id="dashboard" style="display: none;">
+    <h2>API Key Dashboard</h2>
 
-        <div class="login-screen" id="loginScreen">
-            <div class="login-form">
-                <h2>🔒 System Access</h2>
-                <div class="input-group">
-                    <label for="password">Authorization Code</label>
-                    <input type="password" id="password" placeholder="Enter master password">
-                </div>
-                <button class="btn" id="loginBtn" onclick="authenticate()">
-                    Initialize System
-                </button>
-                <div id="loginError" class="status-message status-error" style="margin-top: 20px;">
-                    Access Denied - Invalid Authorization Code
-                </div>
-            </div>
-        </div>
+    <form id="generateForm">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="username" required />
+      </div>
+      <div class="form-group">
+        <label>Project</label>
+        <input type="text" id="project" required />
+      </div>
+      <button type="submit">Generate API Key</button>
+      <div class="status" id="genStatus"></div>
+      <pre id="newKey" style="display:none;"></pre>
+    </form>
 
-        <div class="main-content" id="mainContent">
-            <div class="content-grid">
-                <div class="panel">
-                    <h3>Deploy New Key</h3>
-                    <div id="addStatus" class="status-message"></div>
-                    <div class="add-key-form">
-                        <input type="text" id="newKeyName" placeholder="API Key Identifier">
-                        <input type="text" id="newKeyValue" placeholder="Key Value">
-                        <button class="btn btn-success" onclick="addKey()">Deploy</button>
-                    </div>
-                </div>
+    <form id="deleteForm" style="margin-top: 2rem;">
+      <div class="form-group">
+        <label>API Key to Delete</label>
+        <input type="text" id="apiKeyToDelete" required />
+      </div>
+      <button type="submit">Delete API Key</button>
+      <div class="status" id="delStatus"></div>
+    </form>
+  </div>
 
-                <div class="panel">
-                    <h3>System Status</h3>
-                    <div id="repoStatus" class="status-message"></div>
-                    <button class="btn" onclick="checkStatus()">Status Check</button>
-                </div>
-            </div>
+  <script>
+    const API = 'https://lively-frog-51c2.lolbiggerestlol.workers.dev';
+    let sessionToken = null;
 
-            <div class="panel">
-                <h3>Active API Keys</h3>
-                <div id="keyStatus" class="status-message"></div>
-                <button class="btn" onclick="loadKeys()" style="margin-bottom: 20px;">Refresh Registry</button>
-                <div class="key-list" id="keyList">
-                    <div class="empty-state">
-                        <div class="loading"></div>
-                        <p>Initializing Key Registry...</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    // Login
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const password = document.getElementById('masterPassword').value;
+      const res = await fetch(`${API}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
 
-    <script>
-        // Create geometric particle system
-        function createParticles() {
-            const particlesContainer = document.getElementById('particles');
-            const particleCount = 80;
-            const particleTypes = ['square', 'rectangle', 'line'];
+      const result = await res.json();
+      const status = document.getElementById('loginStatus');
+      status.style.display = 'block';
 
-            for (let i = 0; i < particleCount; i++) {
-                const particle = document.createElement('div');
-                const type = particleTypes[Math.floor(Math.random() * particleTypes.length)];
-                
-                particle.className = `particle ${type}`;
-                
-                // Random positioning and animation
-                particle.style.left = Math.random() * 100 + '%';
-                particle.style.animationDuration = (Math.random() * 15 + 10) + 's';
-                particle.style.animationDelay = Math.random() * 15 + 's';
-                
-                // Random colors from our palette
-                const colors = ['#6366f1', '#8b5cf6', '#06b6d4', '#10b981'];
-                const color = colors[Math.floor(Math.random() * colors.length)];
-                particle.style.background = color;
-                particle.style.opacity = Math.random() * 0.4 + 0.2;
-                
-                particlesContainer.appendChild(particle);
-            }
-        }
+      if (res.ok) {
+        status.className = 'status success';
+        status.textContent = 'Login successful!';
+        sessionToken = result.token; // assumed server returns token
+        document.getElementById('loginCard').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+      } else {
+        status.className = 'status error';
+        status.textContent = result.error || 'Invalid password';
+      }
+    });
 
-        // Initialize particle system
-        createParticles();
+    // Generate Key
+    document.getElementById('generateForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      const project = document.getElementById('project').value;
+      const status = document.getElementById('genStatus');
+      const keyDisplay = document.getElementById('newKey');
 
-        // Configuration
-        const WORKER_URL = 'https://lively-frog-51c2.lolbiggesstlol.workers.dev';
-        let sessionToken = null;
+      const res = await fetch(`${API}/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(sessionToken ? { 'Authorization': `Bearer ${sessionToken}` } : {})
+        },
+        body: JSON.stringify({ username, project })
+      });
 
-        // Connection status monitoring
-        function updateConnectionStatus(online) {
-            const statusEl = document.getElementById('connectionStatus');
-            if (online) {
-                statusEl.className = 'connection-status connection-online';
-                statusEl.textContent = '🟢 Online';
-            } else {
-                statusEl.className = 'connection-status connection-offline';
-                statusEl.textContent = '🔴 Offline';
-            }
-        }
+      const result = await res.json();
+      status.style.display = 'block';
 
-        // Enhanced request function with better error handling
-        async function makeRequest(endpoint, options = {}) {
-            try {
-                const config = {
-                    url: `${WORKER_URL}${endpoint}`,
-                    method: options.method || 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...(sessionToken && { 'X-Session-Token': sessionToken }),
-                        ...(options.headers || {})
-                    },
-                    timeout: 15000, // 15 second timeout
-                    ...(options.data && { data: options.data })
-                };
+      if (res.ok) {
+        status.className = 'status success';
+        status.textContent = 'API key created!';
+        keyDisplay.style.display = 'block';
+        keyDisplay.textContent = result.apiKey;
+      } else {
+        status.className = 'status error';
+        status.textContent = result.error || 'Failed to generate';
+        keyDisplay.style.display = 'none';
+      }
+    });
 
-                const response = await axios(config);
-                updateConnectionStatus(true);
-                return response.data;
-            } catch (error) {
-                updateConnectionStatus(false);
-                
-                // Handle different types of errors
-                if (error.code === 'ECONNABORTED') {
-                    throw new Error('Request timeout - please try again');
-                } else if (error.response) {
-                    // Server responded with error status
-                    const message = error.response.data?.error || 
-                                   error.response.data || 
-                                   `Server error (${error.response.status})`;
-                    throw new Error(message);
-                } else if (error.request) {
-                    // Network error
-                    throw new Error('Network error - check your connection and worker URL');
-                } else {
-                    throw new Error(error.message || 'Unknown error occurred');
-                }
-            }
-        }
+    // Delete Key
+    document.getElementById('deleteForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const apiKey = document.getElementById('apiKeyToDelete').value;
+      const status = document.getElementById('delStatus');
 
-        // Test connection on load
-        async function testConnection() {
-            try {
-                // Simple health check
-                await fetch(WORKER_URL, { 
-                    method: 'OPTIONS',
-                    mode: 'cors'
-                });
-                updateConnectionStatus(true);
-            } catch (error) {
-                updateConnectionStatus(false);
-                console.warn('Initial connection test failed:', error.message);
-            }
-        }
+      const res = await fetch(`${API}/delete`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(sessionToken ? { 'Authorization': `Bearer ${sessionToken}` } : {})
+        },
+        body: JSON.stringify({ apiKey })
+      });
 
-        // Authentication with improved error handling
-        async function authenticate() {
-            const password = document.getElementById('password').value;
-            const errorDiv = document.getElementById('loginError');
-            const loginBtn = document.getElementById('loginBtn');
-            
-            if (!password) {
-                showError(errorDiv, 'Password required');
-                return;
-            }
-            
-            try {
-                loginBtn.disabled = true;
-                loginBtn.textContent = 'Authenticating...';
-                
-                const response = await makeRequest('/auth', {
-                    method: 'POST',
-                    data: { password: password }
-                });
-                
-                sessionToken = response.sessionToken;
-                document.getElementById('loginScreen').style.display = 'none';
-                document.getElementById('mainContent').style.display = 'block';
-                errorDiv.style.display = 'none';
-                
-                await loadKeys();
-                
-            } catch (error) {
-                console.error('Authentication error:', error);
-                showError(errorDiv, error.message);
-            } finally {
-                loginBtn.disabled = false;
-                loginBtn.textContent = 'Initialize System';
-            }
-        }
+      const result = await res.json();
+      status.style.display = 'block';
 
-        // Password input enter key handler
-        document.getElementById('password').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                authenticate();
-            }
-        });
-
-        // Enhanced status display
-        function showStatus(elementId, message, isError = false) {
-            const element = document.getElementById(elementId);
-            element.innerHTML = message;
-            element.className = `status-message ${isError ? 'status-error' : 'status-success'}`;
-            element.style.display = 'block';
-            setTimeout(() => {
-                element.style.display = 'none';
-            }, 5000);
-        }
-
-        function showError(element, message) {
-            element.innerHTML = message;
-            element.style.display = 'block';
-        }
-
-        // Load keys with better error handling
-        async function loadKeys() {
-            try {
-                const keys = await makeRequest('/keys');
-                displayKeys(keys);
-                showStatus('keyStatus', 'Key registry synchronized');
-            } catch (error) {
-                console.error('Registry sync error:', error);
-                showStatus('keyStatus', `Registry error: ${error.message}`, true);
-                
-                if (error.message.includes('Session expired') || error.message.includes('401')) {
-                    // Session expired, go back to login
-                    sessionToken = null;
-                    document.getElementById('loginScreen').style.display = 'block';
-                    document.getElementById('mainContent').style.display = 'none';
-                }
-            }
-        }
-
-        // Display keys function
-        function displayKeys(keys) {
-            const keyList = document.getElementById('keyList');
-            
-            if (!keys || Object.keys(keys).length === 0) {
-                keyList.innerHTML = `
-                    <div class="empty-state">
-                        <svg fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v2H2v-4l4.257-4.257A6 6 0 1118 8zm-6-4a1 1 0 100 2 2 2 0 012 2 1 1 0 102 0 4 4 0 00-4-4z" clip-rule="evenodd"/>
-                        </svg>
-                        <p>Registry Empty</p>
-                        <small>Deploy your first API key to initialize the system</small>
-                    </div>
-                `;
-                return;
-            }
-
-            keyList.innerHTML = Object.entries(keys).map(([name, keyData]) => `
-                <div class="key-item">
-                    <div class="key-info">
-                        <div class="key-name">${escapeHtml(name)}</div>
-                        <div class="key-value">${escapeHtml(keyData.preview || 'Hidden')}</div>
-                        <small style="color: #71717a; font-size: 11px;">Created: ${keyData.created || 'Unknown'}</small>
-                    </div>
-                    <div class="key-actions">
-                        <button class="btn btn-danger btn-small" onclick="deleteKey('${escapeHtml(name)}')">Purge</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // HTML escaping for security
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // Add key with validation
-        async function addKey() {
-            const name = document.getElementById('newKeyName').value.trim();
-            const value = document.getElementById('newKeyValue').value.trim();
-
-            if (!name || !value) {
-                showStatus('addStatus', 'Key identifier and value required', true);
-                return;
-            }
-
-            // Client-side validation
-            if (!/^[a-zA-Z0-9_-]{1,50}$/.test(name)) {
-                showStatus('addStatus', 'Invalid key name format', true);
-                return;
-            }
-
-            if (value.length < 8 || value.length > 500) {
-                showStatus('addStatus', 'Key value must be 8-500 characters', true);
-                return;
-            }
-
-            try {
-                await makeRequest('/keys', {
-                    method: 'POST',
-                    data: { name, value }
-                });
-                
-                document.getElementById('newKeyName').value = '';
-                document.getElementById('newKeyValue').value = '';
-                showStatus('addStatus', 'Key deployed to secure registry');
-                await loadKeys();
-            } catch (error) {
-                console.error('Deployment error:', error);
-                showStatus('addStatus', `Deployment failed: ${error.message}`, true);
-            }
-        }
-
-        // Delete key with confirmation
-        async function deleteKey(name) {
-            if (!confirm(`Purge API key "${name}" from registry?\n\nThis operation is irreversible.`)) {
-                return;
-            }
-
-            try {
-                await makeRequest(`/keys/${encodeURIComponent(name)}`, { 
-                    method: 'DELETE' 
-                });
-                showStatus('keyStatus', 'Key successfully purged from registry');
-                await loadKeys();
-            } catch (error) {
-                console.error('Purge error:', error);
-                showStatus('keyStatus', `Purge operation failed: ${error.message}`, true);
-            }
-        }
-
-        // System status check
-        async function checkStatus() {
-            try {
-                const status = await makeRequest('/status');
-                showStatus('repoStatus', `System: ${status.status} • Keys: ${status.keyCount} • Security: ${status.security}`);
-            } catch (error) {
-                console.error('System check error:', error);
-                showStatus('repoStatus', `System error: ${error.message}`, true);
-            }
-        }
-
-        // Initialize connection test
-        testConnection();
-    </script>
+      if (res.ok) {
+        status.className = 'status success';
+        status.textContent = 'API key deleted!';
+      } else {
+        status.className = 'status error';
+        status.textContent = result.error || 'Failed to delete key';
+      }
+    });
+  </script>
 </body>
 </html>
