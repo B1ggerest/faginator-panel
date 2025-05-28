@@ -6,14 +6,14 @@
     body { font-family: sans-serif; text-align: center; padding: 40px; background: #f2f2f2 }
     input, button { font-size: 16px; padding: 8px; margin: 5px }
     #panel { display: none; margin-top: 20px }
-    ul { list-style: none; padding: 0; margin: 20px auto; max-width: 300px }
+    ul { list-style: none; padding: 0; margin: 20px auto; max-width: 400px }
     li { background: white; padding: 10px; border: 1px solid #ccc; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; border-radius: 5px; }
-    .key { font-family: monospace; word-break: break-all; }
+    .key { font-family: monospace; word-break: break-word; text-align: left; flex-grow: 1; }
   </style>
 </head>
 <body>
   <h2>Login</h2>
-  <input id="pass" type="password" placeholder="Password" />
+  <input id="pass" type="password" placeholder="Master Password" />
   <button onclick="login()">Login</button>
 
   <div id="panel">
@@ -23,121 +23,101 @@
     <ul id="list"></ul>
   </div>
 
-  <script>
-    const endpoint = "https://lively-frog-51c2.lolbiggerestlol.workers.dev";
-    let key = null, iv = null, keys = [];
+<script>
+const endpoint = "https://lively-frog-51c2.lolbiggerestlol.workers.dev";
+let key = null, iv = null, keys = [];
 
-    async function login() {
-      const pass = document.getElementById("pass").value;
-      const res = await fetch(endpoint, {
-        headers: { Authorization: pass }
-      });
+async function login() {
+  const pass = document.getElementById("pass").value;
+  const res = await fetch(endpoint, {
+    headers: { Authorization: pass }
+  });
 
-      if (!res.ok) return alert("Login failed");
+  if (!res.ok) return alert("Login failed");
 
-      const encoded = await res.json(); // <- FIXED
-      if (!encoded) return alert("No data found");
+  const encoded = await res.text();
+  const { iv: ivB64, data } = JSON.parse(atob(encoded));
 
-      const { iv: ivB64, data } = JSON.parse(atob(encoded));
-      const encKey = await getKey(pass);
-      iv = Uint8Array.from(atob(ivB64), c => c.charCodeAt(0));
+  const encKey = await getKey(pass);
+  iv = Uint8Array.from(atob(ivB64), c => c.charCodeAt(0));
 
-      const decrypted = await crypto.subtle.decrypt(
-        { name: "AES-GCM", iv },
-        encKey,
-        Uint8Array.from(atob(data), c => c.charCodeAt(0))
-      );
+  const decrypted = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv },
+    encKey,
+    Uint8Array.from(atob(data), c => c.charCodeAt(0))
+  );
 
-      const decoded = new TextDecoder().decode(decrypted);
-      keys = JSON.parse(decoded);
+  keys = JSON.parse(new TextDecoder().decode(decrypted));
+  key = encKey;
+  document.getElementById("panel").style.display = "block";
+  document.getElementById("pass").style.display = "none";
+  document.querySelector("button").style.display = "none";
+  render();
+}
 
-      key = encKey;
-      document.getElementById("panel").style.display = "block";
-      document.getElementById("pass").style.display = "none";
-      document.querySelector("button").style.display = "none";
-      render();
-    }
+function render() {
+  const ul = document.getElementById("list");
+  ul.innerHTML = "";
+  keys.forEach(k => {
+    const li = document.createElement("li");
+    li.innerHTML = `<span class="key">${k}</span><button onclick="removeKey('${k}')">❌</button>`;
+    ul.appendChild(li);
+  });
+}
 
-    async function addKey() {
-      const val = document.getElementById("key").value.trim();
-      if (!val || keys.includes(val)) return;
-      keys.push(val);
-      document.getElementById("key").value = "";
-      await sync();
-      render();
-    }
+async function addKey() {
+  const val = document.getElementById("key").value.trim();
+  if (!val || keys.includes(val)) return;
+  keys.push(val);
+  document.getElementById("key").value = "";
+  await sync(); render();
+}
 
-    async function removeKey(k) {
-      keys = keys.filter(x => x !== k);
-      await sync();
-      render();
-    }
+async function removeKey(k) {
+  keys = keys.filter(x => x !== k);
+  await sync(); render();
+}
 
-    function render() {
-      const ul = document.getElementById("list");
-      ul.innerHTML = "";
-      keys.forEach(k => {
-        const li = document.createElement("li");
-        const span = document.createElement("span");
-        span.className = "key";
-        span.textContent = k;
+async function sync() {
+  const encoded = new TextEncoder().encode(JSON.stringify(keys));
+  const newIv = crypto.getRandomValues(new Uint8Array(12));
+  const encrypted = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv: newIv },
+    key,
+    encoded
+  );
 
-        const btn = document.createElement("button");
-        btn.textContent = "❌";
-        btn.onclick = () => removeKey(k);
+  const payload = {
+    iv: btoa(String.fromCharCode(...newIv)),
+    data: btoa(String.fromCharCode(...new Uint8Array(encrypted)))
+  };
 
-        li.appendChild(span);
-        li.appendChild(btn);
-        ul.appendChild(li);
-      });
-    }
+  await fetch(endpoint, {
+    method: "PUT",
+    headers: {
+      Authorization: document.getElementById("pass").value,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ content: btoa(JSON.stringify(payload)) })
+  });
+}
 
-    async function sync() {
-      const encoded = new TextEncoder().encode(JSON.stringify(keys));
-      const newIv = crypto.getRandomValues(new Uint8Array(12));
-      const encrypted = await crypto.subtle.encrypt(
-        { name: "AES-GCM", iv: newIv },
-        key,
-        encoded
-      );
-
-      const payload = {
-        iv: btoa(String.fromCharCode(...newIv)),
-        data: btoa(String.fromCharCode(...new Uint8Array(encrypted)))
-      };
-
-      await fetch(endpoint, {
-        method: "PUT",
-        headers: {
-          Authorization: document.getElementById("pass").value,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ content: btoa(JSON.stringify(payload)) })
-      });
-    }
-
-    async function getKey(pass) {
-      const enc = new TextEncoder().encode(pass);
-      const keyMaterial = await crypto.subtle.importKey("raw", enc, "PBKDF2", false, ["deriveKey"]);
-      return await crypto.subtle.deriveKey(
-        {
-          name: "PBKDF2",
-          salt: new TextEncoder().encode("faginator-salt"),
-          iterations: 100000,
-          hash: "SHA-256"
-        },
-        keyMaterial,
-        { name: "AES-GCM", length: 256 },
-        false,
-        ["encrypt", "decrypt"]
-      );
-    }
-
-    async function sha256(str) {
-      const buffer = new TextEncoder().encode(str);
-      const hash = await crypto.subtle.digest("SHA-256", buffer);
-      return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, "0")).join("").toUpperCase();
-    }
-  </script>
+async function getKey(pass) {
+  const enc = new TextEncoder().encode(pass);
+  const keyMaterial = await crypto.subtle.importKey("raw", enc, "PBKDF2", false, ["deriveKey"]);
+  return await crypto.subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      salt: new TextEncoder().encode("faginator-salt"),
+      iterations: 100000,
+      hash: "SHA-256"
+    },
+    keyMaterial,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
+}
+</script>
 </body>
 </html>
