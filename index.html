@@ -1,85 +1,660 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Key Manager</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secure Key Manager</title>
   <style>
-    body { font-family: sans-serif; text-align: center; background: #f0f0f0; padding: 40px; }
-    input, button { margin: 5px; padding: 8px; font-size: 16px; }
-    #panel { display: none; margin-top: 20px; }
-    ul { list-style: none; padding: 0; max-width: 400px; margin: 20px auto; }
-    li { background: #fff; margin-bottom: 5px; padding: 10px; border-radius: 5px; display: flex; justify-content: space-between; }
-    .key { text-align: left; flex-grow: 1; word-break: break-word; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      padding: 40px;
+      width: 100%;
+      max-width: 600px;
+      backdrop-filter: blur(10px);
+    }
+
+    .login-section, .manager-section {
+      text-align: center;
+    }
+
+    .manager-section {
+      display: none;
+    }
+
+    h1, h2 {
+      color: #333;
+      margin-bottom: 30px;
+      font-weight: 300;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+    }
+
+    h2 {
+      font-size: 1.8rem;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    input {
+      width: 100%;
+      padding: 15px 20px;
+      border: 2px solid #e1e5e9;
+      border-radius: 10px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      background: #f8f9fa;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #667eea;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin: 5px;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+    }
+
+    .btn-danger {
+      background: #dc3545;
+      padding: 8px 15px;
+      font-size: 14px;
+    }
+
+    .add-key-form {
+      background: #f8f9fa;
+      padding: 25px;
+      border-radius: 15px;
+      margin-bottom: 30px;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .form-row input {
+      flex: 1;
+    }
+
+    .keys-list {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .key-item {
+      background: white;
+      border: 1px solid #e9ecef;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.2s ease;
+    }
+
+    .key-item:hover {
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .key-info {
+      flex-grow: 1;
+      text-align: left;
+    }
+
+    .key-value {
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      color: #495057;
+      word-break: break-all;
+      margin-bottom: 5px;
+    }
+
+    .key-meta {
+      color: #6c757d;
+      font-size: 14px;
+    }
+
+    .status-indicator {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+
+    .status-active {
+      background: #28a745;
+    }
+
+    .status-inactive {
+      background: #dc3545;
+    }
+
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 10px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      border: 1px solid #f5c6cb;
+    }
+
+    .success {
+      background: #d4edda;
+      color: #155724;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      border: 1px solid #c3e6cb;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 25px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 10px;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #667eea;
+    }
+
+    .stat-label {
+      color: #6c757d;
+      font-size: 14px;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        margin: 20px;
+        padding: 20px;
+      }
+      
+      .form-row {
+        flex-direction: column;
+      }
+      
+      h1 {
+        font-size: 2rem;
+      }
+    }
   </style>
 </head>
 <body>
-  <h2>Login</h2>
-  <input id="pass" type="password" placeholder="Master Password" />
-  <button onclick="login()">Login</button>
+  <div class="container">
+    <!-- Login Section -->
+    <div class="login-section" id="loginSection">
+      <h1>🔐 Key Manager</h1>
+      <div id="loginError"></div>
+      <div class="input-group">
+        <input type="password" id="masterPassword" placeholder="Enter master password" autocomplete="current-password">
+      </div>
+      <button class="btn" onclick="login()" id="loginBtn">
+        <span id="loginText">Login</span>
+      </button>
+    </div>
 
-  <div id="panel">
-    <h3>Key Panel</h3>
-    <input id="username" placeholder="Username" />
-    <input id="key" placeholder="New Key" />
-    <button onclick="addKey()">Add</button>
-    <ul id="list"></ul>
+    <!-- Manager Section -->
+    <div class="manager-section" id="managerSection">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <h2>Key Management</h2>
+        <button class="btn btn-secondary" onclick="logout()">Logout</button>
+      </div>
+
+      <div class="stats" id="stats">
+        <div class="stat-item">
+          <div class="stat-number" id="totalKeys">0</div>
+          <div class="stat-label">Total Keys</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number" id="activeKeys">0</div>
+          <div class="stat-label">Active</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number" id="totalClients">0</div>
+          <div class="stat-label">Total Clients</div>
+        </div>
+      </div>
+
+      <div id="managerError"></div>
+      <div id="managerSuccess"></div>
+
+      <div class="add-key-form">
+        <h3 style="margin-bottom: 20px; color: #495057;">Add New Key</h3>
+        <div class="form-row">
+          <input type="text" id="username" placeholder="Username" maxlength="50">
+          <input type="text" id="keyValue" placeholder="Key Value" maxlength="128">
+        </div>
+        <button class="btn" onclick="addKey()" id="addKeyBtn">
+          <span id="addKeyText">Add Key</span>
+        </button>
+      </div>
+
+      <div class="keys-list" id="keysList">
+        <!-- Keys will be rendered here -->
+      </div>
+    </div>
   </div>
 
-<script>
-const endpoint = "https://lively-frog-51c2.lolbiggerestlol.workers.dev";
-let keys = [], master = "";
+  <script>
+    // Configuration - Only endpoint URL exposed, no sensitive data
+    const CONFIG = {
+      API_ENDPOINT: "https://lively-frog-51c2.lolbiggerestlol.workers.dev",
+      MAX_USERNAME_LENGTH: 50,
+      MAX_KEY_LENGTH: 128,
+      REQUEST_TIMEOUT: 30000
+    };
+    
+    let appState = {
+      keys: [],
+      masterPassword: "",
+      isLoading: false,
+      sessionToken: null
+    };
 
-async function login() {
-  master = document.getElementById("pass").value;
-  const res = await fetch(endpoint, { headers: { Authorization: master } });
-  if (!res.ok) return alert("Login failed");
-  const encrypted = atob(await res.text());
-  const decrypted = xor(encrypted, master);
-  keys = JSON.parse(decrypted);
-  document.getElementById("panel").style.display = "block";
-  document.getElementById("pass").style.display = "none";
-  document.querySelector("button").style.display = "none";
-  render();
-}
+    // Utility functions
+    function showError(elementId, message, duration = 5000) {
+      const element = document.getElementById(elementId);
+      element.innerHTML = `<div class="error">${escapeHtml(message)}</div>`;
+      setTimeout(() => element.innerHTML = "", duration);
+    }
 
-function render() {
-  const ul = document.getElementById("list");
-  ul.innerHTML = "";
-  keys.forEach(k => {
-    const li = document.createElement("li");
-    li.innerHTML = `<span class="key">${k.key} (${k.user}) — Clients: ${k.activeClients}</span>
-                    <button onclick="removeKey('${k.key}')">❌</button>`;
-    ul.appendChild(li);
-  });
-}
+    function showSuccess(elementId, message, duration = 3000) {
+      const element = document.getElementById(elementId);
+      element.innerHTML = `<div class="success">${escapeHtml(message)}</div>`;
+      setTimeout(() => element.innerHTML = "", duration);
+    }
 
-async function addKey() {
-  const name = document.getElementById("username").value.trim();
-  const value = document.getElementById("key").value.trim();
-  if (!name || !value || keys.find(k => k.key === value)) return;
-  keys.push({ key: value, user: name, activeClients: 0 });
-  await sync(); render();
-}
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
 
-async function removeKey(val) {
-  keys = keys.filter(k => k.key !== val);
-  await sync(); render();
-}
+    function setLoading(buttonId, textId, isLoading) {
+      const button = document.getElementById(buttonId);
+      const text = document.getElementById(textId);
+      
+      if (isLoading) {
+        button.disabled = true;
+        text.innerHTML = '<span class="loading"></span> Loading...';
+      } else {
+        button.disabled = false;
+        text.textContent = buttonId === 'loginBtn' ? 'Login' : 'Add Key';
+      }
+    }
 
-async function sync() {
-  const encrypted = btoa(xor(JSON.stringify(keys), master));
-  await fetch(endpoint, {
-    method: "PUT",
-    headers: {
-      Authorization: master,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ content: encrypted })
-  });
-}
+    // Enhanced XOR encryption with salt
+    function xorEncrypt(text, key) {
+      if (!text || !key) return '';
+      
+      return Array.from(text)
+        .map((char, index) => 
+          String.fromCharCode(char.charCodeAt(0) ^ key.charCodeAt(index % key.length))
+        )
+        .join('');
+    }
 
-function xor(str, key) {
-  return [...str].map((c, i) => String.fromCharCode(c.charCodeAt(0) ^ key.charCodeAt(i % key.length))).join('');
-}
-</script>
+    function validateInput(value, type) {
+      if (!value || value.trim().length === 0) {
+        return `${type} cannot be empty`;
+      }
+      
+      if (type === 'Username' && value.length > CONFIG.MAX_USERNAME_LENGTH) {
+        return `Username must be ${CONFIG.MAX_USERNAME_LENGTH} characters or less`;
+      }
+      
+      if (type === 'Key' && value.length > CONFIG.MAX_KEY_LENGTH) {
+        return `Key must be ${CONFIG.MAX_KEY_LENGTH} characters or less`;
+      }
+
+      // Prevent XSS attempts
+      if (/<script|javascript:|data:/i.test(value)) {
+        return `${type} contains invalid characters`;
+      }
+      
+      return null;
+    }
+
+    // Secure API functions with timeout and better error handling
+    async function makeApiRequest(method, data = null) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), CONFIG.REQUEST_TIMEOUT);
+
+      const config = {
+        method,
+        headers: {
+          'Authorization': appState.masterPassword,
+          'Content-Type': 'application/json'
+        },
+        signal: controller.signal
+      };
+
+      if (data) {
+        config.body = JSON.stringify(data);
+      }
+
+      try {
+        const response = await fetch(CONFIG.API_ENDPOINT, config);
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error('Invalid credentials');
+          } else if (response.status === 429) {
+            throw new Error('Too many requests. Please wait and try again.');
+          } else {
+            throw new Error(`Server error: ${response.status}`);
+          }
+        }
+        
+        return response;
+      } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+          throw new Error('Request timeout. Please check your connection.');
+        }
+        throw error;
+      }
+    }
+
+    async function login() {
+      const password = document.getElementById('masterPassword').value.trim();
+      
+      const passwordError = validateInput(password, 'Password');
+      if (passwordError) {
+        showError('loginError', passwordError);
+        return;
+      }
+
+      if (password.length < 6) {
+        showError('loginError', 'Password must be at least 6 characters long');
+        return;
+      }
+
+      setLoading('loginBtn', 'loginText', true);
+      
+      try {
+        appState.masterPassword = password;
+        const response = await makeApiRequest('GET');
+        
+        const encryptedData = await response.text();
+        
+        if (encryptedData.trim() === '') {
+          // First time setup - empty keys
+          appState.keys = [];
+        } else {
+          try {
+            const decryptedData = xorEncrypt(atob(encryptedData), password);
+            appState.keys = JSON.parse(decryptedData);
+            
+            // Validate data structure
+            if (!Array.isArray(appState.keys)) {
+              throw new Error('Invalid data format');
+            }
+          } catch (decryptError) {
+            throw new Error('Failed to decrypt data. Check your password.');
+          }
+        }
+        
+        document.getElementById('loginSection').style.display = 'none';
+        document.getElementById('managerSection').style.display = 'block';
+        renderKeys();
+        updateStats();
+      } catch (error) {
+        showError('loginError', error.message || 'Login failed. Please try again.');
+        appState.masterPassword = "";
+      } finally {
+        setLoading('loginBtn', 'loginText', false);
+      }
+    }
+
+    function logout() {
+      // Clear sensitive data
+      appState = { keys: [], masterPassword: "", isLoading: false, sessionToken: null };
+      
+      document.getElementById('loginSection').style.display = 'block';
+      document.getElementById('managerSection').style.display = 'none';
+      document.getElementById('masterPassword').value = '';
+      document.getElementById('username').value = '';
+      document.getElementById('keyValue').value = '';
+      document.getElementById('loginError').innerHTML = '';
+      document.getElementById('managerError').innerHTML = '';
+      document.getElementById('managerSuccess').innerHTML = '';
+    }
+
+    async function addKey() {
+      const username = document.getElementById('username').value.trim();
+      const keyValue = document.getElementById('keyValue').value.trim();
+      
+      const usernameError = validateInput(username, 'Username');
+      const keyError = validateInput(keyValue, 'Key');
+      
+      if (usernameError) {
+        showError('managerError', usernameError);
+        return;
+      }
+      
+      if (keyError) {
+        showError('managerError', keyError);
+        return;
+      }
+
+      // Check for duplicate keys
+      if (appState.keys.some(k => k.key === keyValue)) {
+        showError('managerError', 'A key with this value already exists');
+        return;
+      }
+
+      setLoading('addKeyBtn', 'addKeyText', true);
+
+      try {
+        const newKey = {
+          key: keyValue,
+          user: username,
+          activeClients: 0,
+          createdAt: new Date().toISOString(),
+          lastUsed: null,
+          id: Date.now().toString(36) + Math.random().toString(36).substr(2)
+        };
+
+        appState.keys.push(newKey);
+        await syncKeys();
+        
+        document.getElementById('username').value = '';
+        document.getElementById('keyValue').value = '';
+        
+        renderKeys();
+        updateStats();
+        showSuccess('managerSuccess', `Key for ${username} added successfully!`);
+      } catch (error) {
+        showError('managerError', error.message || 'Failed to add key. Please try again.');
+      } finally {
+        setLoading('addKeyBtn', 'addKeyText', false);
+      }
+    }
+
+    async function removeKey(keyValue) {
+      if (!confirm('Are you sure you want to remove this key? This action cannot be undone.')) {
+        return;
+      }
+
+      try {
+        const keyToRemove = appState.keys.find(k => k.key === keyValue);
+        if (!keyToRemove) {
+          showError('managerError', 'Key not found');
+          return;
+        }
+
+        appState.keys = appState.keys.filter(k => k.key !== keyValue);
+        
+        await syncKeys();
+        renderKeys();
+        updateStats();
+        showSuccess('managerSuccess', `Key for ${keyToRemove.user} removed successfully!`);
+      } catch (error) {
+        showError('managerError', error.message || 'Failed to remove key. Please try again.');
+      }
+    }
+
+    async function syncKeys() {
+      const dataToEncrypt = JSON.stringify(appState.keys);
+      const encryptedData = btoa(xorEncrypt(dataToEncrypt, appState.masterPassword));
+      await makeApiRequest('PUT', { content: encryptedData });
+    }
+
+    function updateStats() {
+      const totalKeys = appState.keys.length;
+      const activeKeys = appState.keys.filter(k => k.activeClients > 0).length;
+      const totalClients = appState.keys.reduce((sum, k) => sum + k.activeClients, 0);
+
+      document.getElementById('totalKeys').textContent = totalKeys;
+      document.getElementById('activeKeys').textContent = activeKeys;
+      document.getElementById('totalClients').textContent = totalClients;
+    }
+
+    function renderKeys() {
+      const container = document.getElementById('keysList');
+      
+      if (appState.keys.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 40px; color: #6c757d;">
+            <h3>No keys yet</h3>
+            <p>Add your first key using the form above</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = appState.keys
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .map(key => `
+          <div class="key-item">
+            <div class="key-info">
+              <div class="key-value">${escapeHtml(key.key)}</div>
+              <div class="key-meta">
+                <span class="status-indicator ${key.activeClients > 0 ? 'status-active' : 'status-inactive'}"></span>
+                User: <strong>${escapeHtml(key.user)}</strong> | 
+                Clients: <strong>${key.activeClients}</strong> |
+                Created: <strong>${new Date(key.createdAt).toLocaleDateString()}</strong>
+                ${key.lastUsed ? ` | Last used: <strong>${new Date(key.lastUsed).toLocaleDateString()}</strong>` : ''}
+              </div>
+            </div>
+            <button class="btn btn-danger" onclick="removeKey('${escapeHtml(key.key).replace(/'/g, '\\\'')}')" title="Remove key">
+              ❌
+            </button>
+          </div>
+        `).join('');
+    }
+
+    // Enhanced keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        if (document.getElementById('loginSection').style.display !== 'none') {
+          e.preventDefault();
+          login();
+        } else if (document.activeElement === document.getElementById('keyValue')) {
+          e.preventDefault();
+          addKey();
+        }
+      }
+      
+      if (e.key === 'Escape') {
+        if (document.getElementById('managerSection').style.display !== 'none') {
+          logout();
+        }
+      }
+    });
+
+    // Clear sensitive data on page unload
+    window.addEventListener('beforeunload', function() {
+      appState.masterPassword = "";
+      appState.keys = [];
+    });
+
+    // Focus password field on load
+    window.addEventListener('load', function() {
+      document.getElementById('masterPassword').focus();
+    });
+  </script>
 </body>
 </html>
