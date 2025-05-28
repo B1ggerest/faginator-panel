@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>XOR Key Manager</title>
+  <title>Encrypted Key Manager</title>
   <style>
-    body { font-family: sans-serif; padding: 40px; text-align: center; background: #f2f2f2 }
+    body { font-family: sans-serif; text-align: center; padding: 40px; background: #f9f9f9 }
     input, button { font-size: 16px; padding: 8px; margin: 5px }
     #panel { display: none; margin-top: 20px }
-    ul { list-style: none; padding: 0; margin: 20px auto; max-width: 400px }
-    li { background: white; padding: 10px; margin-bottom: 5px; border: 1px solid #ccc; border-radius: 5px; display: flex; justify-content: space-between; }
-    .key { font-family: monospace; word-break: break-word; text-align: left; flex-grow: 1 }
+    ul { list-style: none; padding: 0; margin: 20px auto; max-width: 600px }
+    li { background: #fff; padding: 10px; border: 1px solid #ccc; margin-bottom: 8px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center }
+    .key-info { text-align: left; flex-grow: 1; font-family: monospace; }
   </style>
 </head>
 <body>
@@ -18,6 +18,7 @@
 
   <div id="panel">
     <h3>Key Panel</h3>
+    <input id="user" placeholder="Username" />
     <input id="key" placeholder="New key" />
     <button onclick="addKey()">Add</button>
     <ul id="list"></ul>
@@ -25,32 +26,27 @@
 
 <script>
 const endpoint = "https://lively-frog-51c2.lolbiggerestlol.workers.dev";
-let keys = [];
-let password = "";
-
-function xor(data, key) {
-  return Array.from(data).map((char, i) =>
-    String.fromCharCode(char.charCodeAt(0) ^ key.charCodeAt(i % key.length))
-  ).join("");
-}
+let key = null, iv = null, keys = [];
 
 async function login() {
-  password = document.getElementById("pass").value;
-  const res = await fetch(endpoint, {
-    headers: { Authorization: password }
-  });
-
+  const pass = document.getElementById("pass").value;
+  const res = await fetch(endpoint, { headers: { Authorization: pass } });
   if (!res.ok) return alert("Login failed");
 
-  const text = await res.text();
-  const decoded = atob(text || "");
-  const decrypted = xor(decoded, password);
+  const raw = await res.text();
+  const inner = JSON.parse(`"${raw}"`);
+  const { iv: ivB64, data } = JSON.parse(atob(inner));
 
-  try {
-    keys = JSON.parse(decrypted || "[]");
-  } catch {
-    keys = [];
-  }
+  const encKey = await getKey(pass);
+  iv = Uint8Array.from(atob(ivB64), c => c.charCodeAt(0));
+  const decrypted = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv },
+    encKey,
+    Uint8Array.from(atob(data), c => c.charCodeAt(0))
+  );
+
+  keys = JSON.parse(new TextDecoder().decode(decrypted));
+  key = encKey;
 
   document.getElementById("panel").style.display = "block";
   document.getElementById("pass").style.display = "none";
@@ -61,39 +57,77 @@ async function login() {
 function render() {
   const ul = document.getElementById("list");
   ul.innerHTML = "";
-  keys.forEach(k => {
+  keys.forEach(entry => {
     const li = document.createElement("li");
-    li.innerHTML = `<span class="key">${k}</span><button onclick="removeKey('${k}')">❌</button>`;
+    const div = document.createElement("div");
+    div.className = "key-info";
+    div.textContent = `Key: ${entry.value}\nUser: ${entry.user} | Active Clients: ${entry.activeClients}`;
+
+    const btn = document.createElement("button");
+    btn.textContent = "❌";
+    btn.onclick = () => removeKey(entry.value);
+
+    li.appendChild(div);
+    li.appendChild(btn);
     ul.appendChild(li);
   });
 }
 
 async function addKey() {
+  const username = document.getElementById("user").value.trim();
   const val = document.getElementById("key").value.trim();
-  if (!val || keys.includes(val)) return;
-  keys.push(val);
+  if (!val || !username || keys.some(x => x.value === val)) return;
+
+  keys.push({ value: val, user: username, activeClients: 0 });
   document.getElementById("key").value = "";
+  document.getElementById("user").value = "";
   await sync(); render();
 }
 
-async function removeKey(k) {
-  keys = keys.filter(x => x !== k);
+async function removeKey(value) {
+  keys = keys.filter(x => x.value !== value);
   await sync(); render();
 }
 
 async function sync() {
-  const encoded = JSON.stringify(keys);
-  const encrypted = xor(encoded, password);
-  const payload = btoa(encrypted);
+  const encoded = new TextEncoder().encode(JSON.stringify(keys));
+  const newIv = crypto.getRandomValues(new Uint8Array(12));
+  const encrypted = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv: newIv },
+    key,
+    encoded
+  );
+
+  const payload = {
+    iv: btoa(String.fromCharCode(...newIv)),
+    data: btoa(String.fromCharCode(...new Uint8Array(encrypted)))
+  };
 
   await fetch(endpoint, {
     method: "PUT",
     headers: {
-      Authorization: password,
+      Authorization: document.getElementById("pass").value,
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ content: payload })
+    body: JSON.stringify({ content: btoa(JSON.stringify(payload)) })
   });
+}
+
+async function getKey(pass) {
+  const enc = new TextEncoder().encode(pass);
+  const keyMaterial = await crypto.subtle.importKey("raw", enc, "PBKDF2", false, ["deriveKey"]);
+  return await crypto.subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      salt: new TextEncoder().encode("faginator-salt"),
+      iterations: 100000,
+      hash: "SHA-256"
+    },
+    keyMaterial,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
 }
 </script>
 </body>
