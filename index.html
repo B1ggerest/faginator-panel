@@ -1,33 +1,33 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>XOR Key Manager</title>
+  <title>Faginator Key Panel</title>
   <style>
-    body { font-family: sans-serif; padding: 40px; text-align: center; background: #f2f2f2 }
+    body { font-family: sans-serif; background: #f2f2f2; text-align: center; padding: 40px }
     input, button { font-size: 16px; padding: 8px; margin: 5px }
     #panel { display: none; margin-top: 20px }
-    ul { list-style: none; padding: 0; margin: 20px auto; max-width: 500px }
-    li { background: white; padding: 10px; margin-bottom: 5px; border: 1px solid #ccc; border-radius: 5px; text-align: left }
-    .key { font-family: monospace; word-break: break-word }
+    ul { list-style: none; padding: 0; margin: 20px auto; max-width: 400px }
+    li { background: white; padding: 10px; margin-bottom: 5px; border: 1px solid #ccc; border-radius: 5px; display: flex; justify-content: space-between; }
+    .key { font-family: monospace; flex-grow: 1; word-break: break-word; text-align: left; }
   </style>
 </head>
 <body>
-  <h2>Login</h2>
+  <h2>Key Management</h2>
   <input id="pass" type="password" placeholder="Master Password" />
   <button onclick="login()">Login</button>
 
   <div id="panel">
     <h3>Key Panel</h3>
-    <input id="key" placeholder="Key ID" />
-    <input id="name" placeholder="Owner Name" />
-    <input id="max" type="number" placeholder="Max Users" />
+    <input id="key" placeholder="New Key" />
+    <input id="max" type="number" placeholder="Max Users" min="1" />
+    <input id="user" placeholder="Owner Name" />
     <button onclick="addKey()">Add</button>
     <ul id="list"></ul>
   </div>
 
 <script>
-const endpoint = "https://lively-frog-51c2.lolbiggerestlol.workers.dev/";
-let keys = {};
+const endpoint = "https://lively-frog-51c2.lolbiggerestlol.workers.dev";
+let keys = [];
 let password = "";
 
 function xor(data, key) {
@@ -49,9 +49,9 @@ async function login() {
   const decrypted = xor(decoded, password);
 
   try {
-    keys = JSON.parse(decrypted || "{}");
+    keys = JSON.parse(decrypted || "[]");
   } catch {
-    keys = {};
+    keys = [];
   }
 
   document.getElementById("panel").style.display = "block";
@@ -63,51 +63,31 @@ async function login() {
 function render() {
   const ul = document.getElementById("list");
   ul.innerHTML = "";
-
-  Object.entries(keys).forEach(([id, info]) => {
+  keys.forEach(k => {
     const li = document.createElement("li");
-    li.innerHTML = `
-      <div class="key"><b>${id}</b></div>
-      Name: ${info.name}<br>
-      Max: ${info.max}, Active: ${info.active}
-      <br>
-      <button onclick="useKey('${id}')">Use</button>
-      <button onclick="releaseKey('${id}')">Release</button>
-    `;
+    li.innerHTML = `<span class="key">${k.key} [${k.active}/${k.max}] (${k.name})</span><button onclick="removeKey('${k.key}')">❌</button>`;
     ul.appendChild(li);
   });
 }
 
 async function addKey() {
-  const id = document.getElementById("key").value.trim();
-  const name = document.getElementById("name").value.trim();
+  const val = document.getElementById("key").value.trim();
   const max = parseInt(document.getElementById("max").value.trim());
+  const user = document.getElementById("user").value.trim();
 
-  if (!id || !name || !max || keys[id]) return alert("Invalid or duplicate key");
-
-  keys[id] = { name, max, active: 0 };
+  if (!val || keys.some(k => k.key === val)) return;
+  keys.push({ key: val, max: max || 1, active: 0, name: user || "?" });
+  document.getElementById("key").value = "";
   await sync(); render();
 }
 
-async function useKey(id) {
-  if (keys[id].active < keys[id].max) {
-    keys[id].active++;
-    await sync(); render();
-  } else {
-    alert("Max users reached.");
-  }
-}
-
-async function releaseKey(id) {
-  if (keys[id].active > 0) {
-    keys[id].active--;
-    await sync(); render();
-  }
+async function removeKey(k) {
+  keys = keys.filter(x => x.key !== k);
+  await sync(); render();
 }
 
 async function sync() {
-  const encoded = JSON.stringify(keys);
-  const encrypted = xor(encoded, password);
+  const encrypted = xor(JSON.stringify(keys), password);
   const payload = btoa(encrypted);
 
   await fetch(endpoint, {
