@@ -575,20 +575,22 @@
         const CORRECT_PASSWORD = 'VEXON-T7$g9-PALOR-33NXa';
         let isAuthenticated = false;
 
-        function authenticate() {
-            const password = document.getElementById('password').value;
-            const errorDiv = document.getElementById('loginError');
-            
-            if (password === CORRECT_PASSWORD) {
-                isAuthenticated = true;
-                document.getElementById('loginScreen').style.display = 'none';
-                document.getElementById('mainContent').style.display = 'block';
-                loadKeys();
-                checkRepoStatus();
-            } else {
-                errorDiv.style.display = 'block';
-            }
-        }
+        async function authenticate() {
+  const password = document.getElementById('password').value;
+  const res = await fetch('https://your-worker-url.workers.dev/keys', {
+    method: 'GET',
+    headers: { 'Authorization': password }
+  });
+
+  if (res.ok) {
+    window.authToken = password;
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+    loadKeys();
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+  }
+
 
         document.getElementById('password').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
@@ -597,25 +599,18 @@
         });
 
         async function makeRequest(endpoint, options = {}) {
-            if (!isAuthenticated) {
-                throw new Error('System access required');
-            }
-
-            const response = await fetch(`${WORKER_URL}${endpoint}`, {
-                ...options,
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...options.headers
-                }
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`System error: ${response.status} - ${errorText}`);
-            }
-
-            return response.json();
-        }
+  const token = window.authToken;
+  const res = await fetch(`${WORKER_URL}${endpoint}`, {
+    ...options,
+    headers: {
+      'Authorization': token,
+      'Content-Type': 'application/json',
+      ...(options.headers || {})
+    }
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
 
         function showStatus(elementId, message, isError = false) {
             const element = document.getElementById(elementId);
