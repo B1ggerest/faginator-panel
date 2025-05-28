@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Faginator Suite - API Key Manager</title>
-    <script defer src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.0/axios.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -496,7 +496,7 @@
                 <h2>🔒 System Access</h2>
                 <div class="input-group">
                     <label for="password">Authorization Code</label>
-                    <input type="password" id="password" placeholder="Enter system access code">
+                    <input type="password" id="password" placeholder="Enter master password">
                 </div>
                 <button class="btn" onclick="authenticate()">
                     Initialize System
@@ -522,8 +522,7 @@
                 <div class="panel">
                     <h3>System Status</h3>
                     <div id="repoStatus" class="status-message"></div>
-                    <button class="btn" onclick="checkRepoStatus()">Status Check</button>
-                    <button class="btn btn-success" onclick="syncToPublic()">Deploy to Production</button>
+                    <button class="btn" onclick="checkStatus()">Status Check</button>
                 </div>
             </div>
 
@@ -572,20 +571,31 @@
         // Initialize particle system
         createParticles();
 
+        // Update this URL to match your worker's URL
         const WORKER_URL = 'https://lively-frog-51c2.lolbiggesstlol.workers.dev';
+        let sessionToken = null;
 
         async function authenticate() {
             const password = document.getElementById('password').value;
             const errorDiv = document.getElementById('loginError');
+            
+            if (!password) {
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
             try {
-                const res = await axios.get(`${WORKER_URL}/keys`, {
-                    headers: { Authorization: password }
+                const response = await axios.post(`${WORKER_URL}/auth`, {
+                    password: password
                 });
-                window.authToken = password;
+                
+                sessionToken = response.data.sessionToken;
                 document.getElementById('loginScreen').style.display = 'none';
                 document.getElementById('mainContent').style.display = 'block';
                 loadKeys();
-            } catch {
+                errorDiv.style.display = 'none';
+            } catch (error) {
+                console.error('Authentication error:', error);
                 errorDiv.style.display = 'block';
             }
         }
@@ -597,12 +607,15 @@
         });
 
         async function makeRequest(endpoint, options = {}) {
-            const token = window.authToken;
+            if (!sessionToken) {
+                throw new Error('Session expired');
+            }
+            
             const response = await axios({
                 url: `${WORKER_URL}${endpoint}`,
                 method: options.method || 'GET',
                 headers: {
-                    'Authorization': token,
+                    'X-Session-Token': sessionToken,
                     'Content-Type': 'application/json',
                     ...(options.headers || {})
                 },
@@ -629,6 +642,12 @@
             } catch (error) {
                 console.error('Registry sync error:', error);
                 showStatus('keyStatus', `Registry error: ${error.message}`, true);
+                if (error.response?.status === 401) {
+                    // Session expired, go back to login
+                    sessionToken = null;
+                    document.getElementById('loginScreen').style.display = 'block';
+                    document.getElementById('mainContent').style.display = 'none';
+                }
             }
         }
 
@@ -648,14 +667,14 @@
                 return;
             }
 
-            keyList.innerHTML = Object.entries(keys).map(([name, value]) => `
+            keyList.innerHTML = Object.entries(keys).map(([name, keyData]) => `
                 <div class="key-item">
                     <div class="key-info">
                         <div class="key-name">${escapeHtml(name)}</div>
-                        <div class="key-value">${escapeHtml(value.substring(0, 48))}${value.length > 48 ? '...' : ''}</div>
+                        <div class="key-value">${escapeHtml(keyData.preview || 'Hidden')}</div>
+                        <small style="color: #71717a; font-size: 11px;">Created: ${keyData.created || 'Unknown'}</small>
                     </div>
                     <div class="key-actions">
-                        <button class="btn btn-small" onclick="copyKey('${escapeHtml(value)}')">Extract</button>
                         <button class="btn btn-danger btn-small" onclick="deleteKey('${escapeHtml(name)}')">Purge</button>
                     </div>
                 </div>
@@ -680,7 +699,7 @@
             try {
                 await makeRequest('/keys', {
                     method: 'POST',
-                    body: { name, value }
+                    body: JSON.stringify({ name, value })
                 });
                 
                 document.getElementById('newKeyName').value = '';
@@ -689,7 +708,7 @@
                 loadKeys();
             } catch (error) {
                 console.error('Deployment error:', error);
-                showStatus('addStatus', `Deployment failed: ${error.message}`, true);
+                showStatus('addStatus', `Deployment failed: ${error.response?.data || error.message}`, true);
             }
         }
 
@@ -699,41 +718,24 @@
             }
 
             try {
-                await makeRequest(`/keys/${encodeURIComponent(name)}`, { method: 'DELETE' });
+                await makeRequest(`/keys/${encodeURIComponent(name)}`, { 
+                    method: 'DELETE' 
+                });
                 showStatus('keyStatus', 'Key successfully purged from registry');
                 loadKeys();
             } catch (error) {
                 console.error('Purge error:', error);
-                showStatus('keyStatus', `Purge operation failed: ${error.message}`, true);
+                showStatus('keyStatus', `Purge operation failed: ${error.response?.data || error.message}`, true);
             }
         }
 
-        function copyKey(value) {
-            navigator.clipboard.writeText(value).then(() => {
-                showStatus('keyStatus', 'Key extracted to clipboard');
-            }).catch(err => {
-                console.error('Extraction error:', err);
-                showStatus('keyStatus', 'Key extraction failed', true);
-            });
-        }
-
-        async function checkRepoStatus() {
+        async function checkStatus() {
             try {
                 const status = await makeRequest('/status');
-                showStatus('repoStatus', `All systems operational • Last sync: ${status.lastSync || 'Never'}`);
+                showStatus('repoStatus', `System: ${status.status} • Keys: ${status.keyCount} • Security: ${status.security}`);
             } catch (error) {
                 console.error('System check error:', error);
-                showStatus('repoStatus', `System error: ${error.message}`, true);
-            }
-        }
-
-        async function syncToPublic() {
-            try {
-                const result = await makeRequest('/sync', { method: 'POST' });
-                showStatus('repoStatus', `Production deployment successful - ${result.keysCount || 0} keys synchronized`);
-            } catch (error) {
-                console.error('Deployment error:', error);
-                showStatus('repoStatus', `Production deployment failed: ${error.message}`, true);
+                showStatus('repoStatus', `System error: ${error.response?.data || error.message}`, true);
             }
         }
     </script>
