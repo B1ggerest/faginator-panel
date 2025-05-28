@@ -1,3 +1,758 @@
-{
-  "content": "<!DOCTYPE html>\n<html>\n<head>\n    <title>Available Keys</title>\n    <style>\n        body { font-family: Arial, sans-serif; background: #1a1a1a; color: #fff; padding: 20px; }\n        .key-list { list-style: none; padding: 0; }\n        .key-item { background: #333; margin: 10px 0; padding: 15px; border-radius: 5px; }\n    </style>\n</head>\n<body>\n    <h1>Available Keys</h1>\n    <ul class=\"key-list\">\n        <li class=\"key-item\">test_key</li><li class=\"key-item\">unity_license</li><li class=\"key-item\">api_endpoint</li><li class=\"key-item\">ape</li>\n    </ul>\n    <p>Total keys: 4</p>\n    <p>Last updated: 2025-05-28T22:27:30.393Z</p>\n</body>\n</html>"
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faginator Suite - API Key Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Geometric Particle Background */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            background: linear-gradient(45deg, #6366f1, #8b5cf6, #06b6d4);
+            opacity: 0.6;
+            animation: particleFloat linear infinite;
+        }
+
+        .particle.square {
+            width: 4px;
+            height: 4px;
+        }
+
+        .particle.rectangle {
+            width: 8px;
+            height: 2px;
+        }
+
+        .particle.line {
+            width: 1px;
+            height: 20px;
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(100vh) translateX(0px) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.6;
+            }
+            90% {
+                opacity: 0.6;
+            }
+            100% {
+                transform: translateY(-10vh) translateX(100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            border: 1px solid #333333;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.1), transparent);
+            animation: headerScan 4s infinite;
+        }
+
+        @keyframes headerScan {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .header .brand {
+            position: relative;
+            z-index: 2;
+        }
+
+        .header h1 {
+            font-size: 42px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .header .subtitle {
+            color: #a1a1aa;
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .header .company {
+            color: #71717a;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .login-screen {
+            background: linear-gradient(135deg, #1a1a1a 0%, #262626 100%);
+            border: 1px solid #404040;
+            padding: 60px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            max-width: 450px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .main-content {
+            display: none;
+        }
+
+        .login-form h2 {
+            margin-bottom: 32px;
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .input-group {
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #d4d4d8;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 16px 20px;
+            background: #000000;
+            border: 1px solid #404040;
+            color: #ffffff;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+            background: #0a0a0a;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            margin: 4px;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .btn-success:hover {
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-small {
+            padding: 10px 20px;
+            font-size: 12px;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .panel {
+            background: linear-gradient(135deg, #1a1a1a 0%, #262626 100%);
+            border: 1px solid #404040;
+            padding: 32px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .panel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+            border-color: #525252;
+        }
+
+        .panel h3 {
+            color: #ffffff;
+            margin-bottom: 20px;
+            font-weight: 700;
+            font-size: 18px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .panel h3::before {
+            content: '';
+            width: 3px;
+            height: 20px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        }
+
+        .key-list {
+            max-height: 450px;
+            overflow-y: auto;
+        }
+
+        .key-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .key-list::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        .key-list::-webkit-scrollbar-thumb {
+            background: #404040;
+        }
+
+        .key-list::-webkit-scrollbar-thumb:hover {
+            background: #525252;
+        }
+
+        .key-item {
+            background: #000000;
+            border: 1px solid #262626;
+            padding: 20px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .key-item:hover {
+            background: #0a0a0a;
+            border-color: #404040;
+            transform: translateX(4px);
+        }
+
+        .key-info {
+            flex-grow: 1;
+            margin-right: 16px;
+        }
+
+        .key-name {
+            color: #6366f1;
+            font-weight: 700;
+            margin-bottom: 6px;
+            font-size: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .key-value {
+            color: #71717a;
+            font-size: 12px;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            word-break: break-all;
+            background: #1a1a1a;
+            padding: 6px 10px;
+            border: 1px solid #262626;
+        }
+
+        .key-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .status-message {
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            display: none;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid #10b981;
+            color: #10b981;
+        }
+
+        .status-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid #ef4444;
+            color: #ef4444;
+        }
+
+        .add-key-form {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .add-key-form input {
+            flex: 1;
+            min-width: 200px;
+            padding: 16px 20px;
+            background: #000000;
+            border: 1px solid #404040;
+            color: #ffffff;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .add-key-form input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #71717a;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #262626;
+            border-top-color: #6366f1;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Technical grid overlay */
+        .tech-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .add-key-form {
+                flex-direction: column;
+            }
+            
+            .container {
+                padding: 16px;
+            }
+
+            .panel {
+                padding: 24px;
+            }
+
+            .header h1 {
+                font-size: 32px;
+            }
+
+            .login-screen {
+                padding: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Technical Grid Background -->
+    <div class="tech-grid"></div>
+    
+    <!-- Geometric Particles -->
+    <div class="particles" id="particles"></div>
+
+    <div class="container">
+        <div class="header">
+            <div class="brand">
+                <h1>Faginator Suite</h1>
+                <div class="subtitle">API Key Management System</div>
+                <div class="company">Faginator Enterprises Ltd. ™</div>
+            </div>
+        </div>
+
+        <div class="login-screen" id="loginScreen">
+            <div class="login-form">
+                <h2>🔒 System Access</h2>
+                <div class="input-group">
+                    <label for="password">Authorization Code</label>
+                    <input type="password" id="password" placeholder="Enter system access code">
+                </div>
+                <button class="btn" onclick="authenticate()">
+                    Initialize System
+                </button>
+                <div id="loginError" class="status-message status-error" style="margin-top: 20px;">
+                    Access Denied - Invalid Authorization Code
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content" id="mainContent">
+            <div class="content-grid">
+                <div class="panel">
+                    <h3>Deploy New Key</h3>
+                    <div id="addStatus" class="status-message"></div>
+                    <div class="add-key-form">
+                        <input type="text" id="newKeyName" placeholder="API Key Identifier">
+                        <input type="text" id="newKeyValue" placeholder="Key Value">
+                        <button class="btn btn-success" onclick="addKey()">Deploy</button>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>System Status</h3>
+                    <div id="repoStatus" class="status-message"></div>
+                    <button class="btn" onclick="checkRepoStatus()">Status Check</button>
+                    <button class="btn btn-success" onclick="syncToPublic()">Deploy to Production</button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3>Active API Keys</h3>
+                <div id="keyStatus" class="status-message"></div>
+                <button class="btn" onclick="loadKeys()" style="margin-bottom: 20px;">Refresh Registry</button>
+                <div class="key-list" id="keyList">
+                    <div class="empty-state">
+                        <div class="loading"></div>
+                        <p>Initializing Key Registry...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Create geometric particle system
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 80;
+            const particleTypes = ['square', 'rectangle', 'line'];
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                const type = particleTypes[Math.floor(Math.random() * particleTypes.length)];
+                
+                particle.className = `particle ${type}`;
+                
+                // Random positioning and animation
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDuration = (Math.random() * 15 + 10) + 's';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                
+                // Random colors from our palette
+                const colors = ['#6366f1', '#8b5cf6', '#06b6d4', '#10b981'];
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.background = color;
+                particle.style.opacity = Math.random() * 0.4 + 0.2;
+                
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Initialize particle system
+        createParticles();
+
+        const WORKER_URL = 'https://lively-frog-51c2.lolbiggerestlol.workers.dev';
+        const CORRECT_PASSWORD = 'VEXON-T7$g9-PALOR-33NXa';
+        let isAuthenticated = false;
+
+        function authenticate() {
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('loginError');
+            
+            if (password === CORRECT_PASSWORD) {
+                isAuthenticated = true;
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                loadKeys();
+                checkRepoStatus();
+            } else {
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                authenticate();
+            }
+        });
+
+        async function makeRequest(endpoint, options = {}) {
+            if (!isAuthenticated) {
+                throw new Error('System access required');
+            }
+
+            const response = await fetch(`${WORKER_URL}${endpoint}`, {
+                ...options,
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                }
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`System error: ${response.status} - ${errorText}`);
+            }
+
+            return response.json();
+        }
+
+        function showStatus(elementId, message, isError = false) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = message;
+            element.className = `status-message ${isError ? 'status-error' : 'status-success'}`;
+            element.style.display = 'block';
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+
+        async function loadKeys() {
+            try {
+                const keys = await makeRequest('/keys');
+                displayKeys(keys);
+                showStatus('keyStatus', 'Key registry synchronized');
+            } catch (error) {
+                console.error('Registry sync error:', error);
+                showStatus('keyStatus', `Registry error: ${error.message}`, true);
+            }
+        }
+
+        function displayKeys(keys) {
+            const keyList = document.getElementById('keyList');
+            
+            if (!keys || Object.keys(keys).length === 0) {
+                keyList.innerHTML = `
+                    <div class="empty-state">
+                        <svg fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v2H2v-4l4.257-4.257A6 6 0 1118 8zm-6-4a1 1 0 100 2 2 2 0 012 2 1 1 0 102 0 4 4 0 00-4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <p>Registry Empty</p>
+                        <small>Deploy your first API key to initialize the system</small>
+                    </div>
+                `;
+                return;
+            }
+
+            keyList.innerHTML = Object.entries(keys).map(([name, value]) => `
+                <div class="key-item">
+                    <div class="key-info">
+                        <div class="key-name">${escapeHtml(name)}</div>
+                        <div class="key-value">${escapeHtml(value.substring(0, 48))}${value.length > 48 ? '...' : ''}</div>
+                    </div>
+                    <div class="key-actions">
+                        <button class="btn btn-small" onclick="copyKey('${escapeHtml(value)}')">Extract</button>
+                        <button class="btn btn-danger btn-small" onclick="deleteKey('${escapeHtml(name)}')">Purge</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function addKey() {
+            const name = document.getElementById('newKeyName').value.trim();
+            const value = document.getElementById('newKeyValue').value.trim();
+
+            if (!name || !value) {
+                showStatus('addStatus', 'Key identifier and value required', true);
+                return;
+            }
+
+            try {
+                await makeRequest('/keys', {
+                    method: 'POST',
+                    body: JSON.stringify({ name, value })
+                });
+                
+                document.getElementById('newKeyName').value = '';
+                document.getElementById('newKeyValue').value = '';
+                showStatus('addStatus', 'Key deployed to secure registry');
+                loadKeys();
+            } catch (error) {
+                console.error('Deployment error:', error);
+                showStatus('addStatus', `Deployment failed: ${error.message}`, true);
+            }
+        }
+
+        async function deleteKey(name) {
+            if (!confirm(`Purge API key "${name}" from registry?\n\nThis operation is irreversible.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${WORKER_URL}/keys/${encodeURIComponent(name)}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Purge operation failed: ${response.status} - ${errorText}`);
+                }
+
+                showStatus('keyStatus', 'Key successfully purged from registry');
+                loadKeys();
+            } catch (error) {
+                console.error('Purge error:', error);
+                showStatus('keyStatus', `Purge operation failed: ${error.message}`, true);
+            }
+        }
+
+        function copyKey(value) {
+            navigator.clipboard.writeText(value).then(() => {
+                showStatus('keyStatus', 'Key extracted to clipboard');
+            }).catch(err => {
+                console.error('Extraction error:', err);
+                showStatus('keyStatus', 'Key extraction failed', true);
+            });
+        }
+
+        async function checkRepoStatus() {
+            try {
+                const status = await makeRequest('/status');
+                showStatus('repoStatus', `All systems operational • Last sync: ${status.lastSync || 'Never'}`);
+            } catch (error) {
+                console.error('System check error:', error);
+                showStatus('repoStatus', `System error: ${error.message}`, true);
+            }
+        }
+
+        async function syncToPublic() {
+            try {
+                const result = await makeRequest('/sync', { method: 'POST' });
+                showStatus('repoStatus', `Production deployment successful - ${result.keysCount || 0} keys synchronized`);
+            } catch (error) {
+                console.error('Deployment error:', error);
+                showStatus('repoStatus', `Production deployment failed: ${error.message}`, true);
+            }
+        }
+    </script>
+</body>
+</html>
