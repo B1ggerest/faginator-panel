@@ -29,14 +29,13 @@
 
     async function login() {
       const pass = document.getElementById("pass").value;
-      const hash = await sha256(pass);
       const res = await fetch(endpoint, {
         headers: { Authorization: pass }
       });
 
       if (!res.ok) return alert("Login failed");
 
-      const encoded = await res.text();
+      const encoded = await res.json(); // <- FIXED
       if (!encoded) return alert("No data found");
 
       const { iv: ivB64, data } = JSON.parse(atob(encoded));
