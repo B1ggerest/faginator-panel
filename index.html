@@ -37,7 +37,7 @@ async function login() {
 
   const encoded = await res.text();
   console.log("Encoded payload from Worker:", encoded);
-  const inner = JSON.parse(encoded); // remove quotes
+  const inner = JSON.parse(`"${encoded}"`); // wrap manually as a string
   const { iv: ivB64, data } = JSON.parse(atob(inner)); // decode real JSON object
   
   const encKey = await getKey(pass);
