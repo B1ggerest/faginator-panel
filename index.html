@@ -2,23 +2,61 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>API Key Manager</title>
+  <title>License Admin Panel</title>
   <style>
-    body { background: #0a0a0a; color: #fff; font-family: sans-serif; padding: 2rem; max-width: 800px; margin: auto; }
-    input, button { padding: 0.75rem; margin: 0.5rem 0; border-radius: 5px; border: none; font-size: 1rem; width: 100%; }
-    table { width: 100%; margin-top: 2rem; border-collapse: collapse; }
-    th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #333; }
-    .btn-delete { background: #ff4444; color: white; cursor: pointer; }
-    .btn-create { background: #00ff88; color: black; cursor: pointer; }
+    body {
+      background: #0a0a0a;
+      color: #fff;
+      font-family: sans-serif;
+      padding: 2rem;
+      max-width: 800px;
+      margin: auto;
+    }
+    input, button {
+      padding: 0.75rem;
+      margin: 0.5rem 0;
+      border-radius: 5px;
+      border: none;
+      font-size: 1rem;
+      width: 100%;
+    }
+    button {
+      cursor: pointer;
+    }
+    .btn-create {
+      background: #00ff88;
+      color: black;
+    }
+    .btn-delete {
+      background: #ff4444;
+      color: white;
+    }
+    table {
+      width: 100%;
+      margin-top: 2rem;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid #333;
+    }
+    .hidden {
+      display: none;
+    }
     .success { color: #00ff88; margin-top: 1rem; }
     .error { color: #ff4444; margin-top: 1rem; }
-    .hidden { display: none; }
-    .card { margin-top: 2rem; background: #1a1a1a; padding: 2rem; border-radius: 10px; }
+    .card {
+      background: #1a1a1a;
+      padding: 2rem;
+      border-radius: 10px;
+      margin-top: 2rem;
+    }
   </style>
 </head>
 <body>
 
-  <h1>License Key Manager</h1>
+  <h1>Tool License Admin</h1>
 
   <div class="card" id="loginCard">
     <h2>Login</h2>
@@ -29,7 +67,7 @@
 
   <div class="card hidden" id="dashboardCard">
     <h2>Create New Key</h2>
-    <input type="text" id="usernameInput" placeholder="Username (who is this key for?)" />
+    <input type="text" id="usernameInput" placeholder="Username (optional)" />
     <button class="btn-create" onclick="createKey()">Generate Key</button>
     <div id="createStatus"></div>
 
@@ -64,7 +102,7 @@
       if (res.ok) {
         token = out.token;
         status.className = "success";
-        status.textContent = "Logged in!";
+        status.textContent = "✅ Logged in successfully!";
         document.getElementById("loginCard").classList.add("hidden");
         document.getElementById("dashboardCard").classList.remove("hidden");
         loadKeys();
@@ -89,11 +127,11 @@
       const status = document.getElementById("createStatus");
       if (res.ok) {
         status.className = "success";
-        status.textContent = "Key created!";
+        status.textContent = `✅ Key created: ${out.apiKey}`;
         loadKeys();
       } else {
         status.className = "error";
-        status.textContent = "❌ " + (out.error || "Create failed");
+        status.textContent = "❌ " + (out.error || "Key creation failed");
       }
     }
 
@@ -101,6 +139,7 @@
       const res = await fetch(`${API}/list`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
+
       const data = await res.json();
       const tbody = document.getElementById("keyTableBody");
       tbody.innerHTML = "";
@@ -113,28 +152,37 @@
             <td><code>${key}</code></td>
             <td>${username || "-"}</td>
             <td>${boundHwid || "-"}</td>
-            <td><button class="btn-delete" onclick="deleteKey('${key}')">Delete</button></td>
+            <td>
+              <button class="btn-delete" onclick="deleteKey('${key}')">Delete</button>
+            </td>
           `;
+
           tbody.appendChild(row);
         }
       } else {
-        alert("Failed to load keys.");
+        alert("❌ Failed to load key list.");
       }
     }
 
-    async function deleteKey(key) {
+    async function deleteKey(apiKey) {
       if (!confirm("Delete this key?")) return;
+
       const res = await fetch(`${API}/delete`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify({ apiKey: key })
+        body: JSON.stringify({ apiKey })
       });
 
-      if (res.ok) loadKeys();
-      else alert("Failed to delete key.");
+      const data = await res.json();
+      if (res.ok) {
+        alert("✅ Key deleted.");
+        loadKeys();
+      } else {
+        alert("❌ " + (data.error || "Deletion failed"));
+      }
     }
   </script>
 </body>
