@@ -2,201 +2,115 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Secure API Key Manager</title>
+  <title>Tool License Admin</title>
   <style>
-    body {
-      background: #0a0a0a;
-      color: #ffffff;
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 2rem;
-    }
-    .card {
-      background: #1a1a1a;
-      padding: 2rem;
-      border-radius: 10px;
-      width: 100%;
-      max-width: 500px;
-      margin-bottom: 2rem;
-    }
-    h2 {
-      margin-bottom: 1rem;
-    }
-    .form-group {
-      margin-bottom: 1rem;
-    }
-    label {
-      display: block;
-      margin-bottom: 0.5rem;
-    }
-    input, button {
-      width: 100%;
-      padding: 0.75rem;
-      border-radius: 5px;
-      border: none;
-      font-size: 1rem;
-    }
-    button {
-      background: #00ff88;
-      color: #000;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .status {
-      margin-top: 1rem;
-      padding: 0.5rem;
-      border-radius: 5px;
-      text-align: center;
-      display: none;
-    }
-    .success {
-      background: #004d26;
-      color: #00ff88;
-    }
-    .error {
-      background: #400000;
-      color: #ff4444;
-    }
-    pre {
-      background: #000;
-      padding: 1rem;
-      margin-top: 1rem;
-      overflow-x: auto;
-    }
+    body { background: #0a0a0a; color: #fff; font-family: sans-serif; padding: 2rem; max-width: 600px; margin: auto; }
+    input, button { padding: 0.75rem; margin: 0.5rem 0; width: 100%; border-radius: 4px; border: none; font-size: 1rem; }
+    .card { background: #1a1a1a; padding: 2rem; border-radius: 10px; margin-top: 2rem; }
+    .hidden { display: none; }
+    .success { color: #00ff88; }
+    .error { color: #ff4444; }
+    .label { margin-top: 1rem; display: block; }
   </style>
 </head>
 <body>
 
+  <h1>License Key Admin Panel</h1>
+
   <div class="card" id="loginCard">
-    <h2>Admin Login</h2>
-    <form id="loginForm">
-      <div class="form-group">
-        <label for="masterPassword">Master Password</label>
-        <input type="password" id="masterPassword" required />
-      </div>
-      <button type="submit">Login</button>
-      <div class="status" id="loginStatus"></div>
-    </form>
+    <h2>Login</h2>
+    <input type="password" id="passwordInput" placeholder="Master password" />
+    <button onclick="login()">Login</button>
+    <div id="loginStatus"></div>
   </div>
 
-  <div class="card" id="dashboard" style="display: none;">
-    <h2>API Key Dashboard</h2>
+  <div class="card hidden" id="dashboardCard">
+    <h2>Manage Keys</h2>
 
-    <form id="generateForm">
-      <div class="form-group">
-        <label>Username</label>
-        <input type="text" id="username" required />
-      </div>
-      <div class="form-group">
-        <label>Project</label>
-        <input type="text" id="project" required />
-      </div>
-      <button type="submit">Generate API Key</button>
-      <div class="status" id="genStatus"></div>
-      <pre id="newKey" style="display:none;"></pre>
-    </form>
+    <h3>Create New Key</h3>
+    <input type="text" id="usernameInput" placeholder="Username (optional)" />
+    <button onclick="createKey()">Generate Key</button>
+    <div id="createStatus"></div>
+    <pre id="createdKey" style="margin-top:1rem;"></pre>
 
-    <form id="deleteForm" style="margin-top: 2rem;">
-      <div class="form-group">
-        <label>API Key to Delete</label>
-        <input type="text" id="apiKeyToDelete" required />
-      </div>
-      <button type="submit">Delete API Key</button>
-      <div class="status" id="delStatus"></div>
-    </form>
+    <h3 style="margin-top: 2rem;">Delete Key</h3>
+    <input type="text" id="deleteInput" placeholder="Enter key to delete" />
+    <button onclick="deleteKey()">Delete Key</button>
+    <div id="deleteStatus"></div>
   </div>
 
   <script>
-    const API = 'https://lively-frog-51c2.lolbiggerestlol.workers.dev';
-    let sessionToken = null;
+    const API = "https://lively-frog-51c2.lolbiggerestlol.workers.dev";
+    let token = null;
 
-    // Login
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const password = document.getElementById('masterPassword').value;
+    async function login() {
+      const password = document.getElementById("passwordInput").value;
       const res = await fetch(`${API}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password })
       });
 
-      const result = await res.json();
-      const status = document.getElementById('loginStatus');
-      status.style.display = 'block';
-
+      const out = await res.json();
+      const status = document.getElementById("loginStatus");
       if (res.ok) {
-        status.className = 'status success';
-        status.textContent = 'Login successful!';
-        sessionToken = result.token; // assumed server returns token
-        document.getElementById('loginCard').style.display = 'none';
-        document.getElementById('dashboard').style.display = 'block';
+        token = out.token;
+        status.className = "success";
+        status.textContent = "✅ Login successful!";
+        document.getElementById("loginCard").classList.add("hidden");
+        document.getElementById("dashboardCard").classList.remove("hidden");
       } else {
-        status.className = 'status error';
-        status.textContent = result.error || 'Invalid password';
+        status.className = "error";
+        status.textContent = "❌ " + (out.error || "Login failed");
       }
-    });
+    }
 
-    // Generate Key
-    document.getElementById('generateForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const username = document.getElementById('username').value;
-      const project = document.getElementById('project').value;
-      const status = document.getElementById('genStatus');
-      const keyDisplay = document.getElementById('newKey');
-
-      const res = await fetch(`${API}/generate`, {
-        method: 'POST',
+    async function createKey() {
+      const username = document.getElementById("usernameInput").value;
+      const res = await fetch(`${API}/create`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          ...(sessionToken ? { 'Authorization': `Bearer ${sessionToken}` } : {})
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify({ username, project })
+        body: JSON.stringify({ username })
       });
 
-      const result = await res.json();
-      status.style.display = 'block';
-
+      const out = await res.json();
+      const status = document.getElementById("createStatus");
+      const keyBox = document.getElementById("createdKey");
       if (res.ok) {
-        status.className = 'status success';
-        status.textContent = 'API key created!';
-        keyDisplay.style.display = 'block';
-        keyDisplay.textContent = result.apiKey;
+        status.className = "success";
+        status.textContent = "✅ Key created!";
+        keyBox.textContent = out.apiKey;
       } else {
-        status.className = 'status error';
-        status.textContent = result.error || 'Failed to generate';
-        keyDisplay.style.display = 'none';
+        status.className = "error";
+        status.textContent = "❌ " + (out.error || "Failed to create key");
+        keyBox.textContent = "";
       }
-    });
+    }
 
-    // Delete Key
-    document.getElementById('deleteForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const apiKey = document.getElementById('apiKeyToDelete').value;
-      const status = document.getElementById('delStatus');
-
+    async function deleteKey() {
+      const apiKey = document.getElementById("deleteInput").value;
       const res = await fetch(`${API}/delete`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          ...(sessionToken ? { 'Authorization': `Bearer ${sessionToken}` } : {})
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({ apiKey })
       });
 
-      const result = await res.json();
-      status.style.display = 'block';
-
+      const out = await res.json();
+      const status = document.getElementById("deleteStatus");
       if (res.ok) {
-        status.className = 'status success';
-        status.textContent = 'API key deleted!';
+        status.className = "success";
+        status.textContent = "✅ Key deleted.";
       } else {
-        status.className = 'status error';
-        status.textContent = result.error || 'Failed to delete key';
+        status.className = "error";
+        status.textContent = "❌ " + (out.error || "Delete failed");
       }
-    });
+    }
   </script>
 </body>
 </html>
