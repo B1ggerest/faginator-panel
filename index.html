@@ -18,9 +18,11 @@
 
     <script>
       let password = ""
+      const workerUrl = "https://lively-frog-51c2.lolbiggerestlol.workers.dev"
+
       async function login() {
         password = document.getElementById("pass").value
-        const res = await fetch("https://key-manager.yourname.workers.dev", {
+        const res = await fetch(workerUrl, {
           headers: { Authorization: password }
         })
         if (res.status === 401) return alert("Wrong password")
@@ -32,7 +34,7 @@
 
       async function addKey() {
         const key = document.getElementById("key").value
-        const res = await fetch(`https://key-manager.yourname.workers.dev?mode=add&key=${key}`, {
+        const res = await fetch(`${workerUrl}?mode=add&key=${key}`, {
           headers: { Authorization: password }
         })
         document.getElementById("out").innerText = await res.text()
@@ -40,7 +42,7 @@
 
       async function removeKey() {
         const key = document.getElementById("key").value
-        const res = await fetch(`https://key-manager.yourname.workers.dev?mode=remove&key=${key}`, {
+        const res = await fetch(`${workerUrl}?mode=remove&key=${key}`, {
           headers: { Authorization: password }
         })
         document.getElementById("out").innerText = await res.text()
