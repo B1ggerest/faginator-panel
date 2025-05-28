@@ -1,64 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Faginator Key Manager</title>
+  <title>Encrypted Key Manager</title>
   <style>
-    body {
-      font-family: sans-serif;
-      background: #fafafa;
-      padding: 40px;
-      text-align: center;
-    }
-
-    h2, h3 {
-      color: #222;
-    }
-
-    input, button {
-      padding: 8px 12px;
-      font-size: 15px;
-      margin: 5px;
-    }
-
-    #panel {
-      margin-top: 30px;
-    }
-
-    #keylist {
-      margin-top: 15px;
-      padding: 0;
-      list-style: none;
-    }
-
-    #keylist li {
-      padding: 8px 14px;
-      background: #fff;
-      margin: 4px auto;
-      max-width: 320px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .key {
-      font-family: monospace;
-      font-size: 14px;
-      word-break: break-all;
-      flex: 1;
-      text-align: left;
-    }
-
-    .actions button {
-      margin-left: 5px;
-    }
-
-    #count {
-      margin-top: 15px;
-      font-size: 14px;
-      color: #444;
-    }
+    body { font-family: sans-serif; text-align: center; padding: 40px; background: #f2f2f2 }
+    input, button { font-size: 16px; padding: 8px; margin: 5px }
+    #panel { display: none; margin-top: 20px }
+    ul { list-style: none; padding: 0; margin: 20px auto; max-width: 300px }
+    li { background: white; padding: 10px; border: 1px solid #ccc; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; border-radius: 5px; }
+    .key { font-family: monospace; word-break: break-all; }
   </style>
 </head>
 <body>
@@ -66,84 +16,128 @@
   <input id="pass" type="password" placeholder="Password" />
   <button onclick="login()">Login</button>
 
-  <div id="panel" style="display:none">
+  <div id="panel">
     <h3>Key Panel</h3>
-    <input id="key" placeholder="Enter new key" />
+    <input id="key" placeholder="New key" />
     <button onclick="addKey()">Add</button>
-    <ul id="keylist"></ul>
-    <div id="count"></div>
+    <ul id="list"></ul>
   </div>
 
   <script>
-    let password = "";
-    let keys = [];
+    const endpoint = "https://lively-frog-51c2.lolbiggerestlol.workers.dev";
+    let key = null, iv = null, keys = [];
 
     async function login() {
-      password = document.getElementById("pass").value;
-      const res = await fetch("https://lively-frog-51c2.lolbiggerestlol.workers.dev", {
-        headers: { Authorization: password }
+      const pass = document.getElementById("pass").value;
+      const hash = await sha256(pass);
+      const res = await fetch(endpoint, {
+        headers: { Authorization: pass }
       });
 
-      if (res.status !== 200) return alert("Wrong password");
+      if (!res.ok) return alert("Login failed");
 
-      keys = await res.json();
+      const encoded = await res.text();
+      if (!encoded) return alert("No data found");
+
+      const { iv: ivB64, data } = JSON.parse(atob(encoded));
+      const encKey = await getKey(pass);
+      iv = Uint8Array.from(atob(ivB64), c => c.charCodeAt(0));
+
+      const decrypted = await crypto.subtle.decrypt(
+        { name: "AES-GCM", iv },
+        encKey,
+        Uint8Array.from(atob(data), c => c.charCodeAt(0))
+      );
+
+      const decoded = new TextDecoder().decode(decrypted);
+      keys = JSON.parse(decoded);
+
+      key = encKey;
       document.getElementById("panel").style.display = "block";
       document.getElementById("pass").style.display = "none";
       document.querySelector("button").style.display = "none";
-      renderKeys();
+      render();
     }
 
-    function renderKeys() {
-      const list = document.getElementById("keylist");
-      list.innerHTML = "";
+    async function addKey() {
+      const val = document.getElementById("key").value.trim();
+      if (!val || keys.includes(val)) return;
+      keys.push(val);
+      document.getElementById("key").value = "";
+      await sync();
+      render();
+    }
+
+    async function removeKey(k) {
+      keys = keys.filter(x => x !== k);
+      await sync();
+      render();
+    }
+
+    function render() {
+      const ul = document.getElementById("list");
+      ul.innerHTML = "";
       keys.forEach(k => {
         const li = document.createElement("li");
         const span = document.createElement("span");
         span.className = "key";
         span.textContent = k;
 
-        const actions = document.createElement("div");
-        actions.className = "actions";
-
-        const removeBtn = document.createElement("button");
-        removeBtn.textContent = "❌";
-        removeBtn.onclick = () => removeKey(k);
-
-        const copyBtn = document.createElement("button");
-        copyBtn.textContent = "📋";
-        copyBtn.onclick = () => {
-          navigator.clipboard.writeText(k);
-          alert("Copied: " + k);
-        };
-
-        actions.appendChild(copyBtn);
-        actions.appendChild(removeBtn);
+        const btn = document.createElement("button");
+        btn.textContent = "❌";
+        btn.onclick = () => removeKey(k);
 
         li.appendChild(span);
-        li.appendChild(actions);
-        list.appendChild(li);
+        li.appendChild(btn);
+        ul.appendChild(li);
       });
-
-      document.getElementById("count").innerText = `Total keys: ${keys.length}`;
     }
 
-    async function addKey() {
-      const key = document.getElementById("key").value.trim();
-      if (!key) return;
-      const res = await fetch(`https://lively-frog-51c2.lolbiggerestlol.workers.dev?mode=add&key=${encodeURIComponent(key)}`, {
-        headers: { Authorization: password }
+    async function sync() {
+      const encoded = new TextEncoder().encode(JSON.stringify(keys));
+      const newIv = crypto.getRandomValues(new Uint8Array(12));
+      const encrypted = await crypto.subtle.encrypt(
+        { name: "AES-GCM", iv: newIv },
+        key,
+        encoded
+      );
+
+      const payload = {
+        iv: btoa(String.fromCharCode(...newIv)),
+        data: btoa(String.fromCharCode(...new Uint8Array(encrypted)))
+      };
+
+      await fetch(endpoint, {
+        method: "PUT",
+        headers: {
+          Authorization: document.getElementById("pass").value,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ content: btoa(JSON.stringify(payload)) })
       });
-      keys = await res.json();
-      document.getElementById("key").value = "";
-      renderKeys();
     }
 
-    async function removeKey(k) {
-      const res = await fetch(`https://lively-frog-51c2.lolbiggerestlol.workers.dev?mode=remove&key=${encodeURIComponent(k)}`, {
-        headers: { Authorization: password }
-      });
-      keys = await res.json();
-      renderKeys();
+    async function getKey(pass) {
+      const enc = new TextEncoder().encode(pass);
+      const keyMaterial = await crypto.subtle.importKey("raw", enc, "PBKDF2", false, ["deriveKey"]);
+      return await crypto.subtle.deriveKey(
+        {
+          name: "PBKDF2",
+          salt: new TextEncoder().encode("faginator-salt"),
+          iterations: 100000,
+          hash: "SHA-256"
+        },
+        keyMaterial,
+        { name: "AES-GCM", length: 256 },
+        false,
+        ["encrypt", "decrypt"]
+      );
+    }
+
+    async function sha256(str) {
+      const buffer = new TextEncoder().encode(str);
+      const hash = await crypto.subtle.digest("SHA-256", buffer);
+      return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, "0")).join("").toUpperCase();
     }
   </script>
 </body>
