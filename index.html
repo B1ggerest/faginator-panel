@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Key Manager</title>
+  </head>
+  <body>
+    <h2>Login</h2>
+    <input id="pass" type="password" placeholder="Password" />
+    <button onclick="login()">Login</button>
+
+    <div id="panel" style="display:none">
+      <h3>Key Panel</h3>
+      <input id="key" placeholder="Key to Add/Remove" />
+      <button onclick="addKey()">Add</button>
+      <button onclick="removeKey()">Remove</button>
+      <pre id="out"></pre>
+    </div>
+
+    <script>
+      let password = ""
+      async function login() {
+        password = document.getElementById("pass").value
+        const res = await fetch("https://key-manager.yourname.workers.dev", {
+          headers: { Authorization: password }
+        })
+        if (res.status === 401) return alert("Wrong password")
+        document.getElementById("panel").style.display = "block"
+        document.getElementById("pass").style.display = "none"
+        document.querySelector("button").style.display = "none"
+        document.getElementById("out").innerText = await res.text()
+      }
+
+      async function addKey() {
+        const key = document.getElementById("key").value
+        const res = await fetch(`https://key-manager.yourname.workers.dev?mode=add&key=${key}`, {
+          headers: { Authorization: password }
+        })
+        document.getElementById("out").innerText = await res.text()
+      }
+
+      async function removeKey() {
+        const key = document.getElementById("key").value
+        const res = await fetch(`https://key-manager.yourname.workers.dev?mode=remove&key=${key}`, {
+          headers: { Authorization: password }
+        })
+        document.getElementById("out").innerText = await res.text()
+      }
+    </script>
+  </body>
+</html>
