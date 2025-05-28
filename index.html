@@ -37,7 +37,7 @@ async function login() {
 
   const encoded = await res.text();
   console.log("Encoded payload from Worker:", encoded);
-  const { iv: ivB64, data } = JSON.parse(atob(encoded));
+  const { iv: ivB64, data } = JSON.parse(atob(JSON.parse(encoded)));
 
   const encKey = await getKey(pass);
   iv = Uint8Array.from(atob(ivB64), c => c.charCodeAt(0));
