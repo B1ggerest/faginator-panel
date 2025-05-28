@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Encrypted Key Manager</title>
+  <title>XOR Key Manager</title>
   <style>
-    body { font-family: sans-serif; text-align: center; padding: 40px; background: #f2f2f2 }
+    body { font-family: sans-serif; padding: 40px; text-align: center; background: #f2f2f2 }
     input, button { font-size: 16px; padding: 8px; margin: 5px }
     #panel { display: none; margin-top: 20px }
     ul { list-style: none; padding: 0; margin: 20px auto; max-width: 400px }
-    li { background: white; padding: 10px; border: 1px solid #ccc; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; border-radius: 5px; }
-    .key { font-family: monospace; word-break: break-word; text-align: left; flex-grow: 1; }
+    li { background: white; padding: 10px; margin-bottom: 5px; border: 1px solid #ccc; border-radius: 5px; display: flex; justify-content: space-between; }
+    .key { font-family: monospace; word-break: break-word; text-align: left; flex-grow: 1 }
   </style>
 </head>
 <body>
@@ -25,31 +25,33 @@
 
 <script>
 const endpoint = "https://lively-frog-51c2.lolbiggerestlol.workers.dev";
-let key = null, iv = null, keys = [];
+let keys = [];
+let password = "";
+
+function xor(data, key) {
+  return Array.from(data).map((char, i) =>
+    String.fromCharCode(char.charCodeAt(0) ^ key.charCodeAt(i % key.length))
+  ).join("");
+}
 
 async function login() {
-  const pass = document.getElementById("pass").value;
+  password = document.getElementById("pass").value;
   const res = await fetch(endpoint, {
-    headers: { Authorization: pass }
+    headers: { Authorization: password }
   });
 
   if (!res.ok) return alert("Login failed");
 
-  const encoded = await res.text();
-  console.log("Encoded payload from Worker:", encoded);
-  const { iv: ivB64, data } = JSON.parse(atob(encoded));
-  
-  const encKey = await getKey(pass);
-  iv = Uint8Array.from(atob(ivB64), c => c.charCodeAt(0));
+  const text = await res.text();
+  const decoded = atob(text || "");
+  const decrypted = xor(decoded, password);
 
-  const decrypted = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv },
-    encKey,
-    Uint8Array.from(atob(data), c => c.charCodeAt(0))
-  );
+  try {
+    keys = JSON.parse(decrypted || "[]");
+  } catch {
+    keys = [];
+  }
 
-  keys = JSON.parse(new TextDecoder().decode(decrypted));
-  key = encKey;
   document.getElementById("panel").style.display = "block";
   document.getElementById("pass").style.display = "none";
   document.querySelector("button").style.display = "none";
@@ -80,44 +82,18 @@ async function removeKey(k) {
 }
 
 async function sync() {
-  const encoded = new TextEncoder().encode(JSON.stringify(keys));
-  const newIv = crypto.getRandomValues(new Uint8Array(12));
-  const encrypted = await crypto.subtle.encrypt(
-    { name: "AES-GCM", iv: newIv },
-    key,
-    encoded
-  );
-
-  const payload = {
-    iv: btoa(String.fromCharCode(...newIv)),
-    data: btoa(String.fromCharCode(...new Uint8Array(encrypted)))
-  };
+  const encoded = JSON.stringify(keys);
+  const encrypted = xor(encoded, password);
+  const payload = btoa(encrypted);
 
   await fetch(endpoint, {
     method: "PUT",
     headers: {
-      Authorization: document.getElementById("pass").value,
+      Authorization: password,
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ content: btoa(JSON.stringify(payload)) })
+    body: JSON.stringify({ content: payload })
   });
-}
-
-async function getKey(pass) {
-  const enc = new TextEncoder().encode(pass);
-  const keyMaterial = await crypto.subtle.importKey("raw", enc, "PBKDF2", false, ["deriveKey"]);
-  return await crypto.subtle.deriveKey(
-    {
-      name: "PBKDF2",
-      salt: new TextEncoder().encode("faginator-salt"),
-      iterations: 100000,
-      hash: "SHA-256"
-    },
-    keyMaterial,
-    { name: "AES-GCM", length: 256 },
-    false,
-    ["encrypt", "decrypt"]
-  );
 }
 </script>
 </body>
