@@ -233,6 +233,12 @@
             box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
         }
 
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .btn-danger {
             background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
         }
@@ -448,6 +454,31 @@
             z-index: 0;
         }
 
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .connection-online {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid #10b981;
+            color: #10b981;
+        }
+
+        .connection-offline {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid #ef4444;
+            color: #ef4444;
+        }
+
         @media (max-width: 768px) {
             .content-grid {
                 grid-template-columns: 1fr;
@@ -476,6 +507,11 @@
     </style>
 </head>
 <body>
+    <!-- Connection Status Indicator -->
+    <div id="connectionStatus" class="connection-status connection-offline">
+        🔴 Connecting...
+    </div>
+
     <!-- Technical Grid Background -->
     <div class="tech-grid"></div>
     
@@ -498,7 +534,7 @@
                     <label for="password">Authorization Code</label>
                     <input type="password" id="password" placeholder="Enter master password">
                 </div>
-                <button class="btn" onclick="authenticate()">
+                <button class="btn" id="loginBtn" onclick="authenticate()">
                     Initialize System
                 </button>
                 <div id="loginError" class="status-message status-error" style="margin-top: 20px;">
@@ -571,59 +607,120 @@
         // Initialize particle system
         createParticles();
 
-        // Update this URL to match your worker's URL
+        // Configuration
         const WORKER_URL = 'https://lively-frog-51c2.lolbiggesstlol.workers.dev';
         let sessionToken = null;
 
+        // Connection status monitoring
+        function updateConnectionStatus(online) {
+            const statusEl = document.getElementById('connectionStatus');
+            if (online) {
+                statusEl.className = 'connection-status connection-online';
+                statusEl.textContent = '🟢 Online';
+            } else {
+                statusEl.className = 'connection-status connection-offline';
+                statusEl.textContent = '🔴 Offline';
+            }
+        }
+
+        // Enhanced request function with better error handling
+        async function makeRequest(endpoint, options = {}) {
+            try {
+                const config = {
+                    url: `${WORKER_URL}${endpoint}`,
+                    method: options.method || 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(sessionToken && { 'X-Session-Token': sessionToken }),
+                        ...(options.headers || {})
+                    },
+                    timeout: 15000, // 15 second timeout
+                    ...(options.data && { data: options.data })
+                };
+
+                const response = await axios(config);
+                updateConnectionStatus(true);
+                return response.data;
+            } catch (error) {
+                updateConnectionStatus(false);
+                
+                // Handle different types of errors
+                if (error.code === 'ECONNABORTED') {
+                    throw new Error('Request timeout - please try again');
+                } else if (error.response) {
+                    // Server responded with error status
+                    const message = error.response.data?.error || 
+                                   error.response.data || 
+                                   `Server error (${error.response.status})`;
+                    throw new Error(message);
+                } else if (error.request) {
+                    // Network error
+                    throw new Error('Network error - check your connection and worker URL');
+                } else {
+                    throw new Error(error.message || 'Unknown error occurred');
+                }
+            }
+        }
+
+        // Test connection on load
+        async function testConnection() {
+            try {
+                // Simple health check
+                await fetch(WORKER_URL, { 
+                    method: 'OPTIONS',
+                    mode: 'cors'
+                });
+                updateConnectionStatus(true);
+            } catch (error) {
+                updateConnectionStatus(false);
+                console.warn('Initial connection test failed:', error.message);
+            }
+        }
+
+        // Authentication with improved error handling
         async function authenticate() {
             const password = document.getElementById('password').value;
             const errorDiv = document.getElementById('loginError');
+            const loginBtn = document.getElementById('loginBtn');
             
             if (!password) {
-                errorDiv.style.display = 'block';
+                showError(errorDiv, 'Password required');
                 return;
             }
             
             try {
-                const response = await axios.post(`${WORKER_URL}/auth`, {
-                    password: password
+                loginBtn.disabled = true;
+                loginBtn.textContent = 'Authenticating...';
+                
+                const response = await makeRequest('/auth', {
+                    method: 'POST',
+                    data: { password: password }
                 });
                 
-                sessionToken = response.data.sessionToken;
+                sessionToken = response.sessionToken;
                 document.getElementById('loginScreen').style.display = 'none';
                 document.getElementById('mainContent').style.display = 'block';
-                loadKeys();
                 errorDiv.style.display = 'none';
+                
+                await loadKeys();
+                
             } catch (error) {
                 console.error('Authentication error:', error);
-                errorDiv.style.display = 'block';
+                showError(errorDiv, error.message);
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Initialize System';
             }
         }
 
+        // Password input enter key handler
         document.getElementById('password').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 authenticate();
             }
         });
 
-        async function makeRequest(endpoint, options = {}) {
-            if (!sessionToken) {
-                throw new Error('Session expired');
-            }
-            
-            const response = await axios({
-                url: `${WORKER_URL}${endpoint}`,
-                method: options.method || 'GET',
-                headers: {
-                    'X-Session-Token': sessionToken,
-                    'Content-Type': 'application/json',
-                    ...(options.headers || {})
-                },
-                data: options.body || undefined
-            });
-            return response.data;
-        }
-
+        // Enhanced status display
         function showStatus(elementId, message, isError = false) {
             const element = document.getElementById(elementId);
             element.innerHTML = message;
@@ -634,6 +731,12 @@
             }, 5000);
         }
 
+        function showError(element, message) {
+            element.innerHTML = message;
+            element.style.display = 'block';
+        }
+
+        // Load keys with better error handling
         async function loadKeys() {
             try {
                 const keys = await makeRequest('/keys');
@@ -642,7 +745,8 @@
             } catch (error) {
                 console.error('Registry sync error:', error);
                 showStatus('keyStatus', `Registry error: ${error.message}`, true);
-                if (error.response?.status === 401) {
+                
+                if (error.message.includes('Session expired') || error.message.includes('401')) {
                     // Session expired, go back to login
                     sessionToken = null;
                     document.getElementById('loginScreen').style.display = 'block';
@@ -651,6 +755,7 @@
             }
         }
 
+        // Display keys function
         function displayKeys(keys) {
             const keyList = document.getElementById('keyList');
             
@@ -681,12 +786,14 @@
             `).join('');
         }
 
+        // HTML escaping for security
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
 
+        // Add key with validation
         async function addKey() {
             const name = document.getElementById('newKeyName').value.trim();
             const value = document.getElementById('newKeyValue').value.trim();
@@ -696,22 +803,34 @@
                 return;
             }
 
+            // Client-side validation
+            if (!/^[a-zA-Z0-9_-]{1,50}$/.test(name)) {
+                showStatus('addStatus', 'Invalid key name format', true);
+                return;
+            }
+
+            if (value.length < 8 || value.length > 500) {
+                showStatus('addStatus', 'Key value must be 8-500 characters', true);
+                return;
+            }
+
             try {
                 await makeRequest('/keys', {
                     method: 'POST',
-                    body: JSON.stringify({ name, value })
+                    data: { name, value }
                 });
                 
                 document.getElementById('newKeyName').value = '';
                 document.getElementById('newKeyValue').value = '';
                 showStatus('addStatus', 'Key deployed to secure registry');
-                loadKeys();
+                await loadKeys();
             } catch (error) {
                 console.error('Deployment error:', error);
-                showStatus('addStatus', `Deployment failed: ${error.response?.data || error.message}`, true);
+                showStatus('addStatus', `Deployment failed: ${error.message}`, true);
             }
         }
 
+        // Delete key with confirmation
         async function deleteKey(name) {
             if (!confirm(`Purge API key "${name}" from registry?\n\nThis operation is irreversible.`)) {
                 return;
@@ -722,22 +841,26 @@
                     method: 'DELETE' 
                 });
                 showStatus('keyStatus', 'Key successfully purged from registry');
-                loadKeys();
+                await loadKeys();
             } catch (error) {
                 console.error('Purge error:', error);
-                showStatus('keyStatus', `Purge operation failed: ${error.response?.data || error.message}`, true);
+                showStatus('keyStatus', `Purge operation failed: ${error.message}`, true);
             }
         }
 
+        // System status check
         async function checkStatus() {
             try {
                 const status = await makeRequest('/status');
                 showStatus('repoStatus', `System: ${status.status} • Keys: ${status.keyCount} • Security: ${status.security}`);
             } catch (error) {
                 console.error('System check error:', error);
-                showStatus('repoStatus', `System error: ${error.response?.data || error.message}`, true);
+                showStatus('repoStatus', `System error: ${error.message}`, true);
             }
         }
+
+        // Initialize connection test
+        testConnection();
     </script>
 </body>
 </html>
