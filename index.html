@@ -154,9 +154,13 @@
             <td>${username || "-"}</td>
             <td>${boundHwid || "-"}</td>
             <td>
-              <button class="btn-delete" onclick="deleteKey('${key}')">Delete</button>
+              <button class="btn-delete" data-key="${key}">Delete</button>
             </td>
           `;
+
+          // Add event listener properly instead of inline onclick
+          const deleteBtn = row.querySelector('.btn-delete');
+          deleteBtn.addEventListener('click', () => deleteKey(key));
 
           tbody.appendChild(row);
         }
