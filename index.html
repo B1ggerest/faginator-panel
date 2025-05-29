@@ -85,10 +85,15 @@
       });
 
       const out = await res.json();
-      document.getElementById("createStatus").textContent = res.ok
-        ? `✅ Key created: ${out.apiKey}`
-        : `❌ ${out.error || "Error"}`;
-      loadKeys();
+      const status = document.getElementById("createStatus");
+      if (res.ok) {
+        status.className = "success";
+        status.textContent = `✅ Key created: ${out.apiKey}`;
+        loadKeys();
+      } else {
+        status.className = "error";
+        status.textContent = `❌ ${out.error || "Creation failed"}`;
+      }
     }
 
     async function loadKeys() {
@@ -103,20 +108,32 @@
       if (res.ok) {
         for (const { key, username, boundHwid } of out.keys) {
           const row = document.createElement("tr");
+
           row.innerHTML = `
             <td><code>${key}</code></td>
             <td>${username || "-"}</td>
             <td>${boundHwid || "-"}</td>
-            <td><button class="btn-delete" onclick="deleteKey('${key}')">Delete</button></td>
+            <td><button class="btn-delete">Delete</button></td>
           `;
+
+          // Bind delete action safely
+          const btn = row.querySelector("button");
+          btn.addEventListener("click", () => deleteKey(key));
+
           tbody.appendChild(row);
         }
       }
     }
 
     async function deleteKey(apiKey) {
-      const confirmed = confirm("Delete this key?");
-      if (!confirmed) return;
+      console.log("Trying to delete:", apiKey);
+
+      if (!apiKey) {
+        alert("No key provided!");
+        return;
+      }
+
+      if (!confirm("Delete this key?")) return;
 
       const res = await fetch(`${API}/delete`, {
         method: "POST",
@@ -128,6 +145,8 @@
       });
 
       const out = await res.json();
+      console.log("Delete response:", out);
+
       if (res.ok) {
         alert("✅ Key deleted.");
         loadKeys();
