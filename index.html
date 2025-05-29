@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>D1 Key Admin</title>
+  <title>D1 Key Manager</title>
   <style>
     body { font-family: sans-serif; background: #111; color: white; padding: 20px; }
     input, button { padding: 10px; margin: 5px 0; width: 100%; }
@@ -33,7 +33,7 @@
   </div>
 
   <script>
-    const API = "https://your-worker-name.workers.dev"; // change to your real URL
+    const API = "https://lively-frog-51c2.lolbiggerestlol.workers.dev";
     let token = null;
 
     async function login() {
@@ -47,6 +47,7 @@
       if (res.ok) {
         token = out.token;
         document.getElementById("dashboard").classList.remove("hidden");
+        document.getElementById("loginError").textContent = "";
         loadKeys();
       } else {
         document.getElementById("loginError").textContent = out.error || "Login failed";
@@ -91,7 +92,7 @@
 
     async function deleteKey(id) {
       if (!confirm("Delete this key?")) return;
-      await fetch(`${API}/delete`, {
+      const res = await fetch(`${API}/delete`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -99,8 +100,11 @@
         },
         body: JSON.stringify({ apiKey: id })
       });
-      loadKeys();
+      const out = await res.json();
+      if (res.ok) loadKeys();
+      else alert("❌ Delete failed: " + (out.error || "Unknown error"));
     }
   </script>
+
 </body>
 </html>
