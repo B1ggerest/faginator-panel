@@ -5,10 +5,10 @@
   <style>
     body { font-family: sans-serif; background: #111; color: white; padding: 20px; }
     input, button { padding: 10px; margin: 5px 0; width: 100%; }
-    table { width: 100%; margin-top: 20px; }
-    th, td { padding: 10px; border-bottom: 1px solid #333; }
+    table { width: 100%; margin-top: 20px; border-collapse: collapse; }
+    th, td { padding: 10px; border-bottom: 1px solid #333; text-align: left; }
     .hidden { display: none; }
-    .btn { background: #00ff88; border: none; color: black; cursor: pointer; }
+    .btn { background: #00ff88; border: none; color: black; cursor: pointer; font-weight: bold; }
     .btn-delete { background: #ff4444; color: white; border: none; cursor: pointer; }
   </style>
 </head>
@@ -83,15 +83,16 @@
           <td>${id}</td>
           <td>${username || "-"}</td>
           <td>${hwid || "-"}</td>
-          <td><button class="btn-delete">Delete</button></td>
+          <td><button class="btn-delete" onclick="deleteKey('${id}')">Delete</button></td>
         `;
-        row.querySelector("button").addEventListener("click", () => deleteKey(id));
         tbody.appendChild(row);
       });
     }
 
     async function deleteKey(id) {
-      if (!confirm("Delete this key?")) return;
+      console.log("Attempting to delete:", id);
+      if (!confirm(`Delete key ${id}?`)) return;
+
       const res = await fetch(`${API}/delete`, {
         method: "POST",
         headers: {
@@ -100,9 +101,14 @@
         },
         body: JSON.stringify({ apiKey: id })
       });
+
       const out = await res.json();
-      if (res.ok) loadKeys();
-      else alert("❌ Delete failed: " + (out.error || "Unknown error"));
+      if (res.ok) {
+        alert("✅ Key deleted");
+        loadKeys();
+      } else {
+        alert("❌ Delete failed: " + (out.error || "Unknown error"));
+      }
     }
   </script>
 
