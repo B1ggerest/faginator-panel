@@ -1,54 +1,39 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Key Manager</title>
+  <title>D1 Key Admin</title>
   <style>
-    body { background: #121212; color: #fff; font-family: sans-serif; padding: 2rem; max-width: 800px; margin: auto; }
-    input, button { padding: 0.75rem; margin: 0.5rem 0; border-radius: 5px; border: none; font-size: 1rem; width: 100%; }
-    .btn-create { background: #00ff88; color: black; }
-    .btn-delete { background: #ff4444; color: white; cursor: pointer; }
-    table { width: 100%; margin-top: 2rem; border-collapse: collapse; }
-    th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #444; }
-    .card { background: #1a1a1a; padding: 2rem; border-radius: 10px; margin-top: 2rem; }
+    body { font-family: sans-serif; background: #111; color: white; padding: 20px; }
+    input, button { padding: 10px; margin: 5px 0; width: 100%; }
+    table { width: 100%; margin-top: 20px; }
+    th, td { padding: 10px; border-bottom: 1px solid #333; }
     .hidden { display: none; }
-    .success { color: #00ff88; }
-    .error { color: #ff4444; }
+    .btn { background: #00ff88; border: none; color: black; cursor: pointer; }
+    .btn-delete { background: #ff4444; color: white; border: none; cursor: pointer; }
   </style>
 </head>
 <body>
 
-  <h1>Tool Key Manager</h1>
+  <h2>Admin Login</h2>
+  <input type="password" id="passwordInput" placeholder="Master Password">
+  <button class="btn" onclick="login()">Login</button>
+  <p id="loginError" style="color:red;"></p>
 
-  <div class="card" id="loginCard">
-    <h2>Admin Login</h2>
-    <input type="password" id="passwordInput" placeholder="Master Password">
-    <button class="btn-create" onclick="login()">Login</button>
-    <div id="loginStatus"></div>
-  </div>
-
-  <div class="card hidden" id="dashboardCard">
-    <h2>Create New Key</h2>
+  <div id="dashboard" class="hidden">
+    <h2>Create Key</h2>
     <input type="text" id="usernameInput" placeholder="Username (optional)">
-    <button class="btn-create" onclick="createKey()">Generate Key</button>
-    <div id="createStatus"></div>
+    <button class="btn" onclick="createKey()">Generate</button>
+    <p id="createStatus"></p>
 
-    <h2 style="margin-top:2rem;">All Keys</h2>
+    <h2>All Keys</h2>
     <table>
-      <thead>
-        <tr>
-          <th>Key</th>
-          <th>Username</th>
-          <th>HWID</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="keyTableBody"></tbody>
+      <thead><tr><th>Key</th><th>Username</th><th>HWID</th><th>Actions</th></tr></thead>
+      <tbody id="keyTable"></tbody>
     </table>
   </div>
 
   <script>
-    const API = "https://lively-frog-51c2.lolbiggerestlol.workers.dev";
+    const API = "https://your-worker-name.workers.dev"; // change to your real URL
     let token = null;
 
     async function login() {
@@ -58,18 +43,13 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password })
       });
-
       const out = await res.json();
-      const status = document.getElementById("loginStatus");
-
       if (res.ok) {
         token = out.token;
-        document.getElementById("loginCard").classList.add("hidden");
-        document.getElementById("dashboardCard").classList.remove("hidden");
+        document.getElementById("dashboard").classList.remove("hidden");
         loadKeys();
       } else {
-        status.className = "error";
-        status.textContent = out.error || "Login failed";
+        document.getElementById("loginError").textContent = out.error || "Login failed";
       }
     }
 
@@ -78,76 +58,48 @@
       const res = await fetch(`${API}/create`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({ username })
       });
-
       const out = await res.json();
-      const status = document.getElementById("createStatus");
-      if (res.ok) {
-        status.className = "success";
-        status.textContent = `✅ Key created: ${out.apiKey}`;
-        loadKeys();
-      } else {
-        status.className = "error";
-        status.textContent = `❌ ${out.error || "Creation failed"}`;
-      }
+      document.getElementById("createStatus").textContent =
+        res.ok ? `✅ Created: ${out.apiKey}` : `❌ ${out.error || "Error"}`;
+      if (res.ok) loadKeys();
     }
 
     async function loadKeys() {
       const res = await fetch(`${API}/list`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
-
       const out = await res.json();
-      const tbody = document.getElementById("keyTableBody");
+      const tbody = document.getElementById("keyTable");
       tbody.innerHTML = "";
-
-      if (res.ok) {
-        for (const { key, username, boundHwid } of out.keys) {
-          const row = document.createElement("tr");
-
-          row.innerHTML = `
-            <td><code>${key}</code></td>
-            <td>${username || "-"}</td>
-            <td>${boundHwid || "-"}</td>
-            <td><button class="btn-delete">Delete</button></td>
-          `;
-
-          const btn = row.querySelector("button");
-          btn.addEventListener("click", () => deleteKey(key));
-
-          tbody.appendChild(row);
-        }
-      }
+      out.keys.forEach(({ id, username, hwid }) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${id}</td>
+          <td>${username || "-"}</td>
+          <td>${hwid || "-"}</td>
+          <td><button class="btn-delete">Delete</button></td>
+        `;
+        row.querySelector("button").addEventListener("click", () => deleteKey(id));
+        tbody.appendChild(row);
+      });
     }
 
-    async function deleteKey(apiKey) {
-      console.log("Trying to delete:", apiKey);
-      if (!apiKey) return alert("Missing API key!");
-
-      if (!confirm("Are you sure you want to delete this key?")) return;
-
-      const res = await fetch(`${API}/delete`, {
+    async function deleteKey(id) {
+      if (!confirm("Delete this key?")) return;
+      await fetch(`${API}/delete`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify({ apiKey })
+        body: JSON.stringify({ apiKey: id })
       });
-
-      const out = await res.json();
-      console.log("Delete response:", out);
-
-      if (res.ok) {
-        alert("✅ Key deleted: " + apiKey);
-        loadKeys();
-      } else {
-        alert("❌ Delete failed: " + (out.error || "Unknown error"));
-      }
+      loadKeys();
     }
   </script>
 </body>
