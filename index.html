@@ -128,6 +128,7 @@
       if (res.ok) {
         status.className = "success";
         status.textContent = `✅ Key created: ${out.apiKey}`;
+        document.getElementById("usernameInput").value = ""; // Clear input
         loadKeys();
       } else {
         status.className = "error";
@@ -167,21 +168,33 @@
     async function deleteKey(apiKey) {
       if (!confirm("Delete this key?")) return;
 
-      const res = await fetch(`${API}/delete`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({ apiKey })
-      });
+      try {
+        console.log("Deleting key:", apiKey); // Debug log
+        console.log("Using token:", token); // Debug log
 
-      const data = await res.json();
-      if (res.ok) {
-        alert("✅ Key deleted.");
-        loadKeys();
-      } else {
-        alert("❌ " + (data.error || "Deletion failed"));
+        const res = await fetch(`${API}/delete`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ apiKey })
+        });
+
+        console.log("Response status:", res.status); // Debug log
+        
+        const data = await res.json();
+        console.log("Response data:", data); // Debug log
+
+        if (res.ok) {
+          alert("✅ Key deleted successfully.");
+          loadKeys(); // Refresh the table
+        } else {
+          alert(`❌ Deletion failed: ${data.error || 'Unknown error'} (Status: ${res.status})`);
+        }
+      } catch (error) {
+        console.error("Delete request failed:", error);
+        alert(`❌ Network error: ${error.message}`);
       }
     }
   </script>
