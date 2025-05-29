@@ -116,7 +116,6 @@
             <td><button class="btn-delete">Delete</button></td>
           `;
 
-          // Bind delete action safely
           const btn = row.querySelector("button");
           btn.addEventListener("click", () => deleteKey(key));
 
@@ -127,13 +126,9 @@
 
     async function deleteKey(apiKey) {
       console.log("Trying to delete:", apiKey);
+      if (!apiKey) return alert("Missing API key!");
 
-      if (!apiKey) {
-        alert("No key provided!");
-        return;
-      }
-
-      if (!confirm("Delete this key?")) return;
+      if (!confirm("Are you sure you want to delete this key?")) return;
 
       const res = await fetch(`${API}/delete`, {
         method: "POST",
@@ -148,10 +143,10 @@
       console.log("Delete response:", out);
 
       if (res.ok) {
-        alert("✅ Key deleted.");
+        alert("✅ Key deleted: " + apiKey);
         loadKeys();
       } else {
-        alert("❌ " + (out.error || "Delete failed"));
+        alert("❌ Delete failed: " + (out.error || "Unknown error"));
       }
     }
   </script>
