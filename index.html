@@ -1,123 +1,523 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>D1 Key Manager</title>
-  <style>
-    body { font-family: sans-serif; background: #111; color: white; padding: 20px; }
-    input, button { padding: 10px; margin: 5px 0; width: 100%; }
-    table { width: 100%; margin-top: 20px; border-collapse: collapse; }
-    th, td { padding: 10px; border-bottom: 1px solid #333; text-align: left; }
-    .hidden { display: none; }
-    .btn { background: #00ff88; border: none; color: black; cursor: pointer; font-weight: bold; }
-    .btn-delete { background: #ff4444; color: white; border: none; cursor: pointer; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faginator Suite - Admin Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        #particles-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .logo {
+            font-size: 3rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #00ff88, #0099ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            text-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+
+        .company {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .card {
+            background: rgba(20, 20, 20, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7);
+            border-color: rgba(0, 255, 136, 0.3);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ccc;
+            font-weight: 500;
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 15px;
+            background: rgba(40, 40, 40, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus, input[type="password"]:focus {
+            outline: none;
+            border-color: #00ff88;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #00ff88, #0099ff);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 255, 136, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-delete {
+            background: linear-gradient(45deg, #ff4444, #ff6666);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: auto;
+            margin: 0;
+        }
+
+        .btn-delete:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 68, 68, 0.3);
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .status.success {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            color: #00ff88;
+        }
+
+        .status.error {
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            color: #ff4444;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #ffffff;
+            text-align: center;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Table Styles */
+        .table-container {
+            background: rgba(40, 40, 40, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: rgba(0, 255, 136, 0.1);
+            color: #00ff88;
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: #ccc;
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .key-display {
+            background: rgba(40, 40, 40, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+            color: #00ff88;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 15px;
+            }
+            
+            .logo {
+                font-size: 2rem;
+            }
+            
+            .card {
+                padding: 30px 20px;
+            }
+
+            table {
+                font-size: 14px;
+            }
+
+            th, td {
+                padding: 10px 5px;
+            }
+        }
+    </style>
 </head>
 <body>
+    <canvas id="particles-canvas"></canvas>
+    
+    <div class="container">
+        <div class="header">
+            <div class="logo">FAGINATOR SUITE</div>
+            <div class="subtitle">Admin Control Panel</div>
+            <div class="company">Faginator Enterprises Ltd. ™</div>
+        </div>
 
-  <h2>Admin Login</h2>
-  <input type="password" id="passwordInput" placeholder="Master Password">
-  <button class="btn" onclick="login()">Login</button>
-  <p id="loginError" style="color:red;"></p>
+        <!-- Login Section -->
+        <div id="loginSection" class="card">
+            <div class="section-title">Administrator Login</div>
+            <div class="form-group">
+                <label for="passwordInput">Master Password</label>
+                <input type="password" id="passwordInput" placeholder="Enter master password">
+            </div>
+            <button class="btn" onclick="login()">Access Admin Panel</button>
+            <div id="loginError" class="status error" style="display: none;"></div>
+        </div>
 
-  <div id="dashboard" class="hidden">
-    <h2>Create Key</h2>
-    <input type="text" id="usernameInput" placeholder="Username (optional)">
-    <button class="btn" onclick="createKey()">Generate</button>
-    <p id="createStatus"></p>
+        <!-- Dashboard Section -->
+        <div id="dashboard" class="hidden">
+            <!-- Create Key Section -->
+            <div class="card">
+                <div class="section-title">Generate New API Key</div>
+                <div class="form-group">
+                    <label for="usernameInput">Username (Optional)</label>
+                    <input type="text" id="usernameInput" placeholder="Enter username">
+                </div>
+                <button class="btn" onclick="createKey()">Generate API Key</button>
+                <div id="createStatus" class="status" style="display: none;"></div>
+                <div id="newKeyDisplay" class="key-display" style="display: none;"></div>
+            </div>
 
-    <h2>All Keys</h2>
-    <table>
-      <thead><tr><th>Key</th><th>Username</th><th>HWID</th><th>Actions</th></tr></thead>
-      <tbody id="keyTable"></tbody>
-    </table>
-  </div>
+            <!-- Keys Management Section -->
+            <div class="card">
+                <div class="section-title">API Key Management</div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>API Key</th>
+                                <th>Username</th>
+                                <th>HWID</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="keyTable">
+                            <!-- Keys will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
-  <script>
-    const API = "https://lively-frog-51c2.lolbiggerestlol.workers.dev";
-    let token = null;
+    <script>
+        // Particle system
+        const canvas = document.getElementById('particles-canvas');
+        const ctx = canvas.getContext('2d');
 
-    async function login() {
-      const password = document.getElementById("passwordInput").value;
-      const res = await fetch(`${API}/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password })
-      });
-      const out = await res.json();
-      if (res.ok) {
-        token = out.token;
-        document.getElementById("dashboard").classList.remove("hidden");
-        document.getElementById("loginError").textContent = "";
-        loadKeys();
-      } else {
-        document.getElementById("loginError").textContent = out.error || "Login failed";
-      }
-    }
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
 
-    async function createKey() {
-      const username = document.getElementById("usernameInput").value;
-      const res = await fetch(`${API}/create`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ username })
-      });
-      const out = await res.json();
-      document.getElementById("createStatus").textContent =
-        res.ok ? `✅ Created: ${out.apiKey}` : `❌ ${out.error || "Error"}`;
-      if (res.ok) loadKeys();
-    }
+        const particles = [];
+        const particleCount = 100;
 
-    async function loadKeys() {
-      const res = await fetch(`${API}/list`, {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      const out = await res.json();
-      const tbody = document.getElementById("keyTable");
-      tbody.innerHTML = "";
-      out.keys.forEach(({ id, username, hwid }) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${id}</td>
-          <td>${username || "-"}</td>
-          <td>${hwid || "-"}</td>
-          <td><button class="btn-delete">Delete</button></td>
-        `;
-        const btn = row.querySelector("button");
-        btn.addEventListener("click", () => deleteKey(id));
-        tbody.appendChild(row);
-      });
-    }
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.size = Math.random() * 2 + 1;
+                this.opacity = Math.random() * 0.5 + 0.2;
+            }
 
-    async function deleteKey(id) {
-      console.log("Attempting to delete:", id);
-      try {
-        const res = await fetch(`${API}/delete`, {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ apiKey: id })
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+
+            draw() {
+                ctx.globalAlpha = this.opacity;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = '#00ff88';
+                ctx.fill();
+            }
+        }
+
+        // Initialize particles
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            particles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+
+            // Draw connections
+            ctx.globalAlpha = 0.1;
+            ctx.strokeStyle = '#00ff88';
+            ctx.lineWidth = 1;
+
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < 100) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        // Resize canvas
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
         });
 
-        const out = await res.json();
-        console.log("Delete response:", out);
+        // Original functionality
+        const API = "https://lively-frog-51c2.lolbiggerestlol.workers.dev";
+        let token = null;
 
-        if (res.ok) {
-          alert("✅ Key deleted");
-          loadKeys();
-        } else {
-          alert("❌ Delete failed: " + (out.error || "Unknown error"));
+        async function login() {
+            const password = document.getElementById("passwordInput").value;
+            const loginError = document.getElementById("loginError");
+            
+            try {
+                const res = await fetch(`${API}/login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ password })
+                });
+                const out = await res.json();
+                
+                if (res.ok) {
+                    token = out.token;
+                    document.getElementById("loginSection").style.display = "none";
+                    document.getElementById("dashboard").classList.remove("hidden");
+                    loginError.style.display = "none";
+                    loadKeys();
+                } else {
+                    loginError.textContent = out.error || "Login failed";
+                    loginError.style.display = "block";
+                }
+            } catch (error) {
+                loginError.textContent = "Network error. Please try again.";
+                loginError.style.display = "block";
+            }
         }
-      } catch (err) {
-        console.error("❌ DELETE FETCH FAILED:", err);
-        alert("❌ Network error when deleting key.");
-      }
-    }
-  </script>
 
+        async function createKey() {
+            const username = document.getElementById("usernameInput").value;
+            const createStatus = document.getElementById("createStatus");
+            const keyDisplay = document.getElementById("newKeyDisplay");
+            
+            try {
+                createStatus.style.display = "block";
+                createStatus.className = "status";
+                createStatus.textContent = "Generating API key...";
+                keyDisplay.style.display = "none";
+                
+                const res = await fetch(`${API}/create`, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ username })
+                });
+                const out = await res.json();
+                
+                if (res.ok) {
+                    createStatus.className = "status success";
+                    createStatus.textContent = "✅ API Key Generated Successfully!";
+                    keyDisplay.textContent = out.apiKey;
+                    keyDisplay.style.display = "block";
+                    document.getElementById("usernameInput").value = "";
+                    loadKeys();
+                } else {
+                    createStatus.className = "status error";
+                    createStatus.textContent = `❌ ${out.error || "Error generating key"}`;
+                }
+            } catch (error) {
+                createStatus.className = "status error";
+                createStatus.textContent = "❌ Network error. Please try again.";
+            }
+        }
+
+        async function loadKeys() {
+            try {
+                const res = await fetch(`${API}/list`, {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                const out = await res.json();
+                const tbody = document.getElementById("keyTable");
+                tbody.innerHTML = "";
+                
+                if (out.keys && out.keys.length > 0) {
+                    out.keys.forEach(({ id, username, hwid }) => {
+                        const row = document.createElement("tr");
+                        row.innerHTML = `
+                            <td style="font-family: 'Courier New', monospace; color: #00ff88;">${id}</td>
+                            <td>${username || "-"}</td>
+                            <td style="font-family: 'Courier New', monospace;">${hwid || "-"}</td>
+                            <td><button class="btn-delete" onclick="deleteKey('${id}')">Delete</button></td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #666;">No API keys found</td></tr>';
+                }
+            } catch (error) {
+                console.error("Error loading keys:", error);
+            }
+        }
+
+        async function deleteKey(id) {
+            if (!confirm("Are you sure you want to delete this API key?")) {
+                return;
+            }
+            
+            try {
+                const res = await fetch(`${API}/delete`, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ apiKey: id })
+                });
+
+                const out = await res.json();
+
+                if (res.ok) {
+                    alert("✅ Key deleted successfully");
+                    loadKeys();
+                } else {
+                    alert("❌ Delete failed: " + (out.error || "Unknown error"));
+                }
+            } catch (err) {
+                console.error("❌ DELETE FETCH FAILED:", err);
+                alert("❌ Network error when deleting key.");
+            }
+        }
+
+        // Allow Enter key to submit login
+        document.getElementById("passwordInput").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                login();
+            }
+        });
+    </script>
 </body>
 </html>
