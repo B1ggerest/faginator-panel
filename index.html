@@ -180,16 +180,39 @@
         }
 
         /* Table Styles */
+        .table-wrapper {
+            display: flex;
+            align-items: stretch;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
         .table-container {
             background: rgba(40, 40, 40, 0.8);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 15px;
-            overflow: hidden;
-            margin-top: 20px;
+            overflow-x: auto;
+            overflow-y: visible;
+            flex: 1;
+        }
+
+        .actions-column {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            min-width: 80px;
+        }
+
+        .action-spacer {
+            height: 53px;
+            background: rgba(0, 255, 136, 0.1);
+            border-radius: 8px;
+            margin-bottom: 1px;
         }
 
         table {
             width: 100%;
+            min-width: 500px;
             border-collapse: collapse;
         }
 
@@ -206,10 +229,47 @@
             padding: 15px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             color: #ccc;
+            overflow: hidden;
+        }
+
+        .key-cell {
+            font-family: 'Courier New', monospace;
+            color: #00ff88;
+            word-break: break-all;
+            font-size: 13px;
+            line-height: 1.3;
+        }
+
+        .hwid-cell {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            word-break: break-all;
         }
 
         tr:hover {
             background: rgba(255, 255, 255, 0.02);
+        }
+
+        .external-delete-btn {
+            background: linear-gradient(45deg, #ff4444, #ff6666);
+            color: white;
+            border: none;
+            padding: 15px 8px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 1px;
+            height: 53px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .external-delete-btn:hover {
+            transform: translateX(-3px);
+            box-shadow: -5px 5px 15px rgba(255, 68, 68, 0.3);
         }
 
         .key-display {
@@ -236,12 +296,43 @@
                 padding: 30px 20px;
             }
 
+            .table-wrapper {
+                margin: 20px -20px 0 -20px;
+                gap: 10px;
+            }
+
+            .table-container {
+                border-radius: 0;
+                border-left: none;
+                border-right: none;
+            }
+
+            .actions-column {
+                min-width: 60px;
+                margin-right: 10px;
+            }
+
             table {
+                min-width: 400px;
                 font-size: 14px;
             }
 
             th, td {
-                padding: 10px 5px;
+                padding: 10px 8px;
+            }
+
+            .key-cell {
+                font-size: 11px;
+            }
+
+            .external-delete-btn {
+                padding: 12px 6px;
+                font-size: 10px;
+                height: 45px;
+            }
+
+            .action-spacer {
+                height: 45px;
             }
         }
     </style>
@@ -284,20 +375,25 @@
             <!-- Keys Management Section -->
             <div class="card">
                 <div class="section-title">API Key Management</div>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>API Key</th>
-                                <th>Username</th>
-                                <th>HWID</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="keyTable">
-                            <!-- Keys will be populated here -->
-                        </tbody>
-                    </table>
+                <div class="table-wrapper">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>API Key</th>
+                                    <th>Username</th>
+                                    <th>HWID</th>
+                                </tr>
+                            </thead>
+                            <tbody id="keyTable">
+                                <!-- Keys will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="actions-column" id="actionsColumn">
+                        <div class="action-spacer"></div>
+                        <!-- Delete buttons will be populated here -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -462,21 +558,32 @@
                 });
                 const out = await res.json();
                 const tbody = document.getElementById("keyTable");
+                const actionsColumn = document.getElementById("actionsColumn");
+                
                 tbody.innerHTML = "";
+                actionsColumn.innerHTML = '<div class="action-spacer"></div>';
                 
                 if (out.keys && out.keys.length > 0) {
                     out.keys.forEach(({ id, username, hwid }) => {
+                        // Add table row
                         const row = document.createElement("tr");
                         row.innerHTML = `
-                            <td style="font-family: 'Courier New', monospace; color: #00ff88;">${id}</td>
+                            <td class="key-cell">${id}</td>
                             <td>${username || "-"}</td>
-                            <td style="font-family: 'Courier New', monospace;">${hwid || "-"}</td>
-                            <td><button class="btn-delete" onclick="deleteKey('${id}')">Delete</button></td>
+                            <td class="hwid-cell">${hwid || "-"}</td>
                         `;
                         tbody.appendChild(row);
+
+                        // Add corresponding delete button
+                        const deleteBtn = document.createElement("button");
+                        deleteBtn.className = "external-delete-btn";
+                        deleteBtn.textContent = "DEL";
+                        deleteBtn.title = "Delete API Key";
+                        deleteBtn.onclick = () => deleteKey(id);
+                        actionsColumn.appendChild(deleteBtn);
                     });
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #666;">No API keys found</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #666;">No API keys found</td></tr>';
                 }
             } catch (error) {
                 console.error("Error loading keys:", error);
