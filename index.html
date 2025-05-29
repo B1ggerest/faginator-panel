@@ -83,31 +83,38 @@
           <td>${id}</td>
           <td>${username || "-"}</td>
           <td>${hwid || "-"}</td>
-          <td><button class="btn-delete" onclick="deleteKey('${id}')">Delete</button></td>
+          <td><button class="btn-delete">Delete</button></td>
         `;
+        const btn = row.querySelector("button");
+        btn.addEventListener("click", () => deleteKey(id));
         tbody.appendChild(row);
       });
     }
 
     async function deleteKey(id) {
       console.log("Attempting to delete:", id);
-      if (!confirm(`Delete key ${id}?`)) return;
+      try {
+        const res = await fetch(`${API}/delete`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ apiKey: id })
+        });
 
-      const res = await fetch(`${API}/delete`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ apiKey: id })
-      });
+        const out = await res.json();
+        console.log("Delete response:", out);
 
-      const out = await res.json();
-      if (res.ok) {
-        alert("✅ Key deleted");
-        loadKeys();
-      } else {
-        alert("❌ Delete failed: " + (out.error || "Unknown error"));
+        if (res.ok) {
+          alert("✅ Key deleted");
+          loadKeys();
+        } else {
+          alert("❌ Delete failed: " + (out.error || "Unknown error"));
+        }
+      } catch (err) {
+        console.error("❌ DELETE FETCH FAILED:", err);
+        alert("❌ Network error when deleting key.");
       }
     }
   </script>
