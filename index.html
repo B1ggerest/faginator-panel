@@ -12,75 +12,150 @@
         }
 
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #0a0a0a;
             color: #ffffff;
             overflow-x: hidden;
             min-height: 100vh;
+            position: relative;
         }
 
+        /* Enhanced Background Effects */
         #particles-canvas {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
+            z-index: -2;
+        }
+
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at top, rgba(0, 255, 136, 0.1) 0%, transparent 50%),
+                        radial-gradient(ellipse at bottom, rgba(0, 153, 255, 0.1) 0%, transparent 50%);
             z-index: -1;
+            animation: pulse 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            100% { opacity: 1; }
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 40px 20px;
             min-height: 100vh;
+            position: relative;
         }
 
         .header {
             text-align: center;
             margin-bottom: 60px;
+            animation: slideDown 1s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .logo {
-            font-size: 3rem;
-            font-weight: bold;
-            background: linear-gradient(45deg, #00ff88, #0099ff);
+            font-size: 3.5rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, #00ff88, #0099ff, #ff00ff, #00ff88);
+            background-size: 300% 300%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             margin-bottom: 10px;
-            text-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+            text-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+            animation: gradientShift 3s ease-in-out infinite;
+            letter-spacing: 2px;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
         }
 
         .subtitle {
             color: #888;
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             margin-bottom: 5px;
+            font-weight: 300;
+            letter-spacing: 1px;
         }
 
         .company {
             color: #666;
             font-size: 0.9rem;
+            font-style: italic;
         }
 
         .card {
-            background: rgba(20, 20, 20, 0.8);
+            background: rgba(20, 20, 20, 0.9);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
+            border-radius: 25px;
             padding: 40px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
             margin-bottom: 30px;
-            transition: all 0.3s ease;
+            transition: all 0.4s ease;
+            animation: slideUp 0.8s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+            transition: left 0.5s;
+        }
+
+        .card:hover::before {
+            left: 100%;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7);
-            border-color: rgba(0, 255, 136, 0.3);
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 35px 70px rgba(0, 0, 0, 0.8),
+                        0 0 50px rgba(0, 255, 136, 0.2);
+            border-color: rgba(0, 255, 136, 0.4);
         }
 
         .form-group {
             margin-bottom: 25px;
+            position: relative;
         }
 
         label {
@@ -88,130 +163,222 @@
             margin-bottom: 8px;
             color: #ccc;
             font-weight: 500;
+            font-size: 0.95rem;
         }
 
         input[type="text"], input[type="password"] {
             width: 100%;
-            padding: 15px;
-            background: rgba(40, 40, 40, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
+            padding: 18px 20px;
+            background: rgba(40, 40, 40, 0.9);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
             color: #ffffff;
             font-size: 16px;
             transition: all 0.3s ease;
+            position: relative;
         }
 
         input[type="text"]:focus, input[type="password"]:focus {
             outline: none;
             border-color: #00ff88;
-            box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+            box-shadow: 0 0 25px rgba(0, 255, 136, 0.3);
+            background: rgba(40, 40, 40, 1);
+            transform: scale(1.02);
         }
 
         .btn {
             background: linear-gradient(45deg, #00ff88, #0099ff);
             color: white;
             border: none;
-            padding: 15px 30px;
-            border-radius: 10px;
+            padding: 18px 35px;
+            border-radius: 15px;
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
             width: 100%;
             margin-top: 10px;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
         }
 
         .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0, 255, 136, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(0, 255, 136, 0.4);
+            background: linear-gradient(45deg, #00ff88, #0099ff, #00ff88);
+            background-size: 200% 200%;
+            animation: btnGlow 0.5s ease-in-out;
+        }
+
+        @keyframes btnGlow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
         }
 
         .btn:active {
-            transform: translateY(0);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #333, #555);
+            margin-left: 10px;
+            width: auto;
+            min-width: 120px;
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(45deg, #444, #666);
+            box-shadow: 0 15px 30px rgba(255, 255, 255, 0.1);
         }
 
         .btn-delete {
             background: linear-gradient(45deg, #ff4444, #ff6666);
             color: white;
             border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 14px;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-size: 13px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
             width: auto;
             margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .btn-delete:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(255, 68, 68, 0.3);
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 10px 20px rgba(255, 68, 68, 0.4);
+            background: linear-gradient(45deg, #ff3333, #ff5555);
         }
 
         .status {
-            padding: 15px;
-            border-radius: 10px;
+            padding: 18px;
+            border-radius: 15px;
             margin-top: 20px;
             text-align: center;
+            font-weight: 500;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .status.success {
-            background: rgba(0, 255, 136, 0.1);
-            border: 1px solid rgba(0, 255, 136, 0.3);
+            background: rgba(0, 255, 136, 0.15);
+            border: 2px solid rgba(0, 255, 136, 0.4);
             color: #00ff88;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
         }
 
         .status.error {
-            background: rgba(255, 68, 68, 0.1);
-            border: 1px solid rgba(255, 68, 68, 0.3);
+            background: rgba(255, 68, 68, 0.15);
+            border: 2px solid rgba(255, 68, 68, 0.4);
             color: #ff4444;
+            box-shadow: 0 0 20px rgba(255, 68, 68, 0.2);
         }
 
         .section-title {
-            font-size: 1.5rem;
-            margin-bottom: 20px;
+            font-size: 1.6rem;
+            margin-bottom: 25px;
             color: #ffffff;
             text-align: center;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(45deg, #00ff88, #0099ff);
+            border-radius: 2px;
         }
 
         .hidden {
             display: none;
         }
 
-        /* Table Styles */
+        /* Enhanced Table Styles */
         .table-container {
-            background: rgba(40, 40, 40, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
+            background: rgba(30, 30, 30, 0.9);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            overflow: hidden;
+            margin-top: 20px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 25px;
+            background: rgba(0, 255, 136, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .table-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #00ff88;
+        }
+
+        .table-scroll {
             overflow-x: auto;
             overflow-y: visible;
-            margin-top: 20px;
         }
 
         table {
             width: 100%;
-            min-width: 600px;
+            min-width: 700px;
             border-collapse: collapse;
             table-layout: fixed;
         }
 
         th {
-            background: rgba(0, 255, 136, 0.1);
+            background: rgba(0, 255, 136, 0.05);
             color: #00ff88;
-            padding: 15px 10px;
+            padding: 18px 15px;
             text-align: left;
-            font-weight: bold;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-weight: 600;
+            border-bottom: 2px solid rgba(0, 255, 136, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.9rem;
         }
 
-        th:nth-child(1) { width: 45%; } /* API Key */
-        th:nth-child(2) { width: 20%; } /* Username */
-        th:nth-child(3) { width: 20%; } /* HWID */
-        th:nth-child(4) { width: 15%; } /* Actions */
+        th:nth-child(1) { width: 45%; }
+        th:nth-child(2) { width: 20%; }
+        th:nth-child(3) { width: 20%; }
+        th:nth-child(4) { width: 15%; }
 
         td {
-            padding: 15px 10px;
+            padding: 18px 15px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             color: #ccc;
             overflow: hidden;
@@ -221,14 +388,23 @@
             font-family: 'Courier New', monospace;
             color: #00ff88;
             word-break: break-all;
-            font-size: 12px;
-            line-height: 1.3;
+            font-size: 11px;
+            line-height: 1.4;
+            background: rgba(0, 255, 136, 0.05);
+            border-radius: 8px;
+            padding: 8px;
+            margin: -8px;
         }
 
         .hwid-cell {
             font-family: 'Courier New', monospace;
-            font-size: 12px;
+            font-size: 11px;
             word-break: break-all;
+            color: #0099ff;
+            background: rgba(0, 153, 255, 0.05);
+            border-radius: 8px;
+            padding: 8px;
+            margin: -8px;
         }
 
         .action-cell {
@@ -236,32 +412,74 @@
             white-space: nowrap;
         }
 
+        tr {
+            transition: all 0.3s ease;
+        }
+
         tr:hover {
-            background: rgba(255, 255, 255, 0.02);
+            background: rgba(255, 255, 255, 0.05);
+            transform: scale(1.01);
         }
 
         .key-display {
-            background: rgba(40, 40, 40, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            padding: 15px;
+            background: rgba(40, 40, 40, 0.9);
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            border-radius: 15px;
+            padding: 20px;
             font-family: 'Courier New', monospace;
             word-break: break-all;
             color: #00ff88;
-            margin-top: 15px;
+            margin-top: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+            animation: glow 2s ease-in-out infinite alternate;
         }
 
+        @keyframes glow {
+            from { box-shadow: 0 0 20px rgba(0, 255, 136, 0.2); }
+            to { box-shadow: 0 0 30px rgba(0, 255, 136, 0.4); }
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #00ff88;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .button-group .btn {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        /* Enhanced Responsive Design */
         @media (max-width: 768px) {
             .container {
                 padding: 20px 15px;
             }
             
             .logo {
-                font-size: 2rem;
+                font-size: 2.5rem;
             }
             
             .card {
-                padding: 30px 20px;
+                padding: 25px 20px;
             }
 
             .table-container {
@@ -272,48 +490,76 @@
             }
 
             table {
-                min-width: 500px;
-                font-size: 14px;
+                min-width: 600px;
+                font-size: 13px;
             }
 
             th, td {
-                padding: 10px 8px;
+                padding: 12px 10px;
             }
 
-            th:nth-child(1) { width: 40%; }
-            th:nth-child(2) { width: 25%; }
-            th:nth-child(3) { width: 20%; }
-            th:nth-child(4) { width: 15%; }
-
-            .key-cell {
+            .key-cell, .hwid-cell {
                 font-size: 10px;
+                padding: 6px;
+                margin: -6px;
             }
 
             .btn-delete {
-                padding: 6px 12px;
-                font-size: 12px;
+                padding: 8px 14px;
+                font-size: 11px;
             }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .button-group .btn {
+                width: 100%;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #00ff88, #0099ff);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(45deg, #00ff88, #0099ff, #ff00ff);
         }
     </style>
 </head>
 <body>
+    <div class="bg-gradient"></div>
     <canvas id="particles-canvas"></canvas>
     
     <div class="container">
         <div class="header">
             <div class="logo">FAGINATOR SUITE</div>
-            <div class="subtitle">Admin Control Panel</div>
+            <div class="subtitle">Advanced Admin Control Panel</div>
             <div class="company">Faginator Enterprises Ltd. ™</div>
         </div>
 
         <!-- Login Section -->
         <div id="loginSection" class="card">
-            <div class="section-title">Administrator Login</div>
+            <div class="section-title">🔐 Administrator Access</div>
             <div class="form-group">
                 <label for="passwordInput">Master Password</label>
                 <input type="password" id="passwordInput" placeholder="Enter master password">
             </div>
-            <button class="btn" onclick="login()">Access Admin Panel</button>
+            <button class="btn" onclick="login()">
+                <span id="loginBtnText">Access Admin Panel</span>
+            </button>
             <div id="loginError" class="status error" style="display: none;"></div>
         </div>
 
@@ -321,40 +567,50 @@
         <div id="dashboard" class="hidden">
             <!-- Create Key Section -->
             <div class="card">
-                <div class="section-title">Generate New API Key</div>
+                <div class="section-title">🔑 Generate New API Key</div>
                 <div class="form-group">
                     <label for="usernameInput">Username (Optional)</label>
                     <input type="text" id="usernameInput" placeholder="Enter username">
                 </div>
-                <button class="btn" onclick="createKey()">Generate API Key</button>
+                <button class="btn" onclick="createKey()">
+                    <span id="createBtnText">Generate API Key</span>
+                </button>
                 <div id="createStatus" class="status" style="display: none;"></div>
                 <div id="newKeyDisplay" class="key-display" style="display: none;"></div>
             </div>
 
             <!-- Keys Management Section -->
             <div class="card">
-                <div class="section-title">API Key Management</div>
+                <div class="section-title">⚙️ API Key Management</div>
                 <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>API Key</th>
-                                <th>Username</th>
-                                <th>HWID</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="keyTable">
-                            <!-- Keys will be populated here -->
-                        </tbody>
-                    </table>
+                    <div class="table-header">
+                        <div class="table-title">Active API Keys</div>
+                        <button class="btn btn-secondary" onclick="loadKeys()">
+                            <span id="refreshBtnText">🔄 Refresh</span>
+                        </button>
+                    </div>
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>🔑 API Key</th>
+                                    <th>👤 Username</th>
+                                    <th>💻 HWID</th>
+                                    <th>⚡ Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="keyTable">
+                                <tr><td colspan="4" style="text-align: center; color: #666; padding: 30px;">Loading keys...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Particle system
+        // Enhanced Particle System
         const canvas = document.getElementById('particles-canvas');
         const ctx = canvas.getContext('2d');
 
@@ -362,32 +618,72 @@
         canvas.height = window.innerHeight;
 
         const particles = [];
-        const particleCount = 100;
+        const particleCount = 150;
+        const mouse = { x: 0, y: 0 };
 
         class Particle {
             constructor() {
                 this.x = Math.random() * canvas.width;
                 this.y = Math.random() * canvas.height;
-                this.vx = (Math.random() - 0.5) * 0.5;
-                this.vy = (Math.random() - 0.5) * 0.5;
-                this.size = Math.random() * 2 + 1;
-                this.opacity = Math.random() * 0.5 + 0.2;
+                this.vx = (Math.random() - 0.5) * 0.8;
+                this.vy = (Math.random() - 0.5) * 0.8;
+                this.size = Math.random() * 3 + 1;
+                this.opacity = Math.random() * 0.6 + 0.2;
+                this.hue = Math.random() * 120 + 120; // Green to blue range
+                this.life = Math.random() * 100 + 100;
+                this.maxLife = this.life;
             }
 
             update() {
                 this.x += this.vx;
                 this.y += this.vy;
+                this.life--;
 
-                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
-                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+                // Mouse interaction
+                const dx = mouse.x - this.x;
+                const dy = mouse.y - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < 100) {
+                    const force = (100 - distance) / 100;
+                    this.vx += dx * force * 0.001;
+                    this.vy += dy * force * 0.001;
+                }
+
+                // Boundary bouncing
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -0.8;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -0.8;
+
+                // Keep particles in bounds
+                this.x = Math.max(0, Math.min(canvas.width, this.x));
+                this.y = Math.max(0, Math.min(canvas.height, this.y));
+
+                // Respawn particle when life ends
+                if (this.life <= 0) {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.life = this.maxLife;
+                    this.hue = Math.random() * 120 + 120;
+                }
+
+                // Damping
+                this.vx *= 0.99;
+                this.vy *= 0.99;
             }
 
             draw() {
-                ctx.globalAlpha = this.opacity;
+                const alpha = this.opacity * (this.life / this.maxLife);
+                ctx.globalAlpha = alpha;
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fillStyle = '#00ff88';
+                ctx.fillStyle = `hsl(${this.hue}, 70%, 60%)`;
                 ctx.fill();
+                
+                // Add glow effect
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = `hsl(${this.hue}, 70%, 60%)`;
+                ctx.fill();
+                ctx.shadowBlur = 0;
             }
         }
 
@@ -395,6 +691,12 @@
         for (let i = 0; i < particleCount; i++) {
             particles.push(new Particle());
         }
+
+        // Mouse tracking
+        canvas.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
 
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -404,9 +706,8 @@
                 particle.draw();
             });
 
-            // Draw connections
-            ctx.globalAlpha = 0.1;
-            ctx.strokeStyle = '#00ff88';
+            // Draw enhanced connections
+            ctx.globalAlpha = 0.15;
             ctx.lineWidth = 1;
 
             for (let i = 0; i < particles.length; i++) {
@@ -415,7 +716,10 @@
                     const dy = particles[i].y - particles[j].y;
                     const distance = Math.sqrt(dx * dx + dy * dy);
 
-                    if (distance < 100) {
+                    if (distance < 120) {
+                        const alpha = (120 - distance) / 120;
+                        ctx.globalAlpha = alpha * 0.2;
+                        ctx.strokeStyle = `hsl(${(particles[i].hue + particles[j].hue) / 2}, 70%, 60%)`;
                         ctx.beginPath();
                         ctx.moveTo(particles[i].x, particles[i].y);
                         ctx.lineTo(particles[j].x, particles[j].y);
@@ -435,138 +739,225 @@
             canvas.height = window.innerHeight;
         });
 
-        // Original functionality
-        const API = "https://lively-frog-51c2.lolbiggerestlol.workers.dev";
-        let token = null;
+        // API Configuration (public endpoint only)
+        const API_BASE = "https://lively-frog-51c2.lolbiggerestlol.workers.dev";
+        let authToken = null;
 
+        // Utility Functions
+        function showLoading(buttonId, text = "Loading...") {
+            const btn = document.getElementById(buttonId);
+            if (btn) {
+                btn.innerHTML = `<div class="loading"></div>${text}`;
+                btn.disabled = true;
+            }
+        }
+
+        function hideLoading(buttonId, originalText) {
+            const btn = document.getElementById(buttonId);
+            if (btn) {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // Enhanced Login Function
         async function login() {
             const password = document.getElementById("passwordInput").value;
             const loginError = document.getElementById("loginError");
             
+            if (!password) {
+                loginError.textContent = "Please enter the master password";
+                loginError.style.display = "block";
+                return;
+            }
+            
+            showLoading("loginBtnText", "Authenticating...");
+            loginError.style.display = "none";
+            
             try {
-                const res = await fetch(`${API}/login`, {
+                const response = await fetch(`${API_BASE}/login`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ password })
                 });
-                const out = await res.json();
                 
-                if (res.ok) {
-                    token = out.token;
+                const result = await response.json();
+                
+                if (response.ok) {
+                    authToken = result.token;
                     document.getElementById("loginSection").style.display = "none";
                     document.getElementById("dashboard").classList.remove("hidden");
-                    loginError.style.display = "none";
-                    loadKeys();
+                    await loadKeys();
                 } else {
-                    loginError.textContent = out.error || "Login failed";
+                    loginError.textContent = result.error || "Authentication failed";
                     loginError.style.display = "block";
                 }
             } catch (error) {
-                loginError.textContent = "Network error. Please try again.";
+                loginError.textContent = "Network error. Please check your connection.";
                 loginError.style.display = "block";
+            } finally {
+                hideLoading("loginBtnText", "Access Admin Panel");
             }
         }
 
+        // Enhanced Create Key Function
         async function createKey() {
             const username = document.getElementById("usernameInput").value;
             const createStatus = document.getElementById("createStatus");
             const keyDisplay = document.getElementById("newKeyDisplay");
             
+            showLoading("createBtnText", "Generating...");
+            
             try {
                 createStatus.style.display = "block";
                 createStatus.className = "status";
-                createStatus.textContent = "Generating API key...";
+                createStatus.textContent = "🔄 Generating new API key...";
                 keyDisplay.style.display = "none";
                 
-                const res = await fetch(`${API}/create`, {
+                const response = await fetch(`${API_BASE}/create`, {
                     method: "POST",
                     headers: {
-                        "Authorization": `Bearer ${token}`,
+                        "Authorization": `Bearer ${authToken}`,
                         "Content-Type": "application/json"
                     },
-                    body: JSON.stringify({ username })
+                    body: JSON.stringify({ username: username || undefined })
                 });
-                const out = await res.json();
                 
-                if (res.ok) {
+                const result = await response.json();
+                
+                if (response.ok) {
                     createStatus.className = "status success";
                     createStatus.textContent = "✅ API Key Generated Successfully!";
-                    keyDisplay.textContent = out.apiKey;
+                    keyDisplay.textContent = result.apiKey;
                     keyDisplay.style.display = "block";
                     document.getElementById("usernameInput").value = "";
-                    loadKeys();
+                    await loadKeys();
                 } else {
                     createStatus.className = "status error";
-                    createStatus.textContent = `❌ ${out.error || "Error generating key"}`;
+                    createStatus.textContent = `❌ ${result.error || "Error generating key"}`;
                 }
             } catch (error) {
                 createStatus.className = "status error";
                 createStatus.textContent = "❌ Network error. Please try again.";
+            } finally {
+                hideLoading("createBtnText", "Generate API Key");
             }
         }
 
+        // Enhanced Load Keys Function
         async function loadKeys() {
+            const tbody = document.getElementById("keyTable");
+            const refreshBtn = document.getElementById("refreshBtnText");
+            
+            if (refreshBtn.textContent.includes("🔄")) {
+                showLoading("refreshBtnText", "Loading...");
+            }
+            
             try {
-                const res = await fetch(`${API}/list`, {
-                    headers: { "Authorization": `Bearer ${token}` }
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #666; padding: 30px;">🔄 Loading keys...</td></tr>';
+                
+                const response = await fetch(`${API_BASE}/list`, {
+                    headers: { "Authorization": `Bearer ${authToken}` }
                 });
-                const out = await res.json();
-                const tbody = document.getElementById("keyTable");
+                
+                const result = await response.json();
                 tbody.innerHTML = "";
                 
-                if (out.keys && out.keys.length > 0) {
-                    out.keys.forEach(({ id, username, hwid }) => {
+                if (result.keys && result.keys.length > 0) {
+                    result.keys.forEach(({ id, username, hwid }, index) => {
                         const row = document.createElement("tr");
+                        row.style.animationDelay = `${index * 0.1}s`;
                         row.innerHTML = `
                             <td class="key-cell">${id}</td>
-                            <td>${username || "-"}</td>
-                            <td class="hwid-cell">${hwid || "-"}</td>
-                            <td class="action-cell"><button class="btn-delete" onclick="deleteKey('${id}')">Delete</button></td>
+                            <td>${username || "—"}</td>
+                            <td class="hwid-cell">${hwid || "—"}</td>
+                            <td class="action-cell">
+                                <button class="btn-delete" onclick="deleteKey('${id}')">
+                                    🗑️ Delete
+                                </button>
+                            </td>
                         `;
                         tbody.appendChild(row);
                     });
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #666;">No API keys found</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #666; padding: 30px;">📭 No API keys found</td></tr>';
                 }
             } catch (error) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #ff4444; padding: 30px;">❌ Error loading keys</td></tr>';
                 console.error("Error loading keys:", error);
+            } finally {
+                hideLoading("refreshBtnText", "🔄 Refresh");
             }
         }
 
+        // Enhanced Delete Key Function
         async function deleteKey(id) {
-            if (!confirm("Are you sure you want to delete this API key?")) {
+            if (!confirm("⚠️ Are you sure you want to delete this API key?\n\nThis action cannot be undone!")) {
                 return;
             }
             
             try {
-                const res = await fetch(`${API}/delete`, {
+                const response = await fetch(`${API_BASE}/delete`, {
                     method: "POST",
                     headers: {
-                        "Authorization": `Bearer ${token}`,
+                        "Authorization": `Bearer ${authToken}`,
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify({ apiKey: id })
                 });
 
-                const out = await res.json();
+                const result = await response.json();
 
-                if (res.ok) {
-                    alert("✅ Key deleted successfully");
-                    loadKeys();
+                if (response.ok) {
+                    // Show success notification
+                    const notification = document.createElement('div');
+                    notification.className = 'status success';
+                    notification.textContent = '✅ Key deleted successfully';
+                    notification.style.position = 'fixed';
+                    notification.style.top = '20px';
+                    notification.style.right = '20px';
+                    notification.style.zIndex = '1000';
+                    notification.style.maxWidth = '300px';
+                    document.body.appendChild(notification);
+                    
+                    setTimeout(() => notification.remove(), 3000);
+                    await loadKeys();
                 } else {
-                    alert("❌ Delete failed: " + (out.error || "Unknown error"));
+                    alert("❌ Delete failed: " + (result.error || "Unknown error"));
                 }
-            } catch (err) {
-                console.error("❌ DELETE FETCH FAILED:", err);
+            } catch (error) {
+                console.error("❌ DELETE FAILED:", error);
                 alert("❌ Network error when deleting key.");
             }
         }
 
-        // Allow Enter key to submit login
+        // Enhanced Event Listeners
         document.getElementById("passwordInput").addEventListener("keypress", function(event) {
             if (event.key === "Enter") {
                 login();
             }
+        });
+
+        document.getElementById("usernameInput").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                createKey();
+            }
+        });
+
+        // Auto-refresh keys every 30 seconds when dashboard is visible
+        setInterval(() => {
+            if (!document.getElementById("dashboard").classList.contains("hidden")) {
+                loadKeys();
+            }
+        }, 30000);
+
+        // Initialize tooltips and other enhancements
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add subtle animations to cards
+            const cards = document.querySelectorAll('.card');
+            cards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.2}s`;
+            });
         });
     </script>
 </body>
